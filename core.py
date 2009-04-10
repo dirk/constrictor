@@ -22,4 +22,3 @@ class Constrictor(object):
   # Stubbing out methods
   def register_controller(self, controller):
     self.controllers.append(controller)
-  # Instantiate a new controller test. (Watch the output that it prints!)
