@@ -2,8 +2,9 @@
 MySQL backend API for Constrictor. Contains the revolutionary Model-Query 
 systems.
 """
-
+# Import Python modules.
 import re
+# Import mysqldb module. (Must install yourself, not included with Python.)
 import MySQLdb as mysqldb
 
 # Register utility to be bound into the database. Allows for something like 

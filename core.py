@@ -1,25 +1,10 @@
-# Ok, just getting start with the framework
-"""
-Just outlining the base system.
-
-Core: Contains basic code for interfacing all of the different aspects together.
-Core.Controller: Inherited by actual controllers, holds operations that power (and provide 
-                 functionality for)  controllers.
-Core.Model: Used for defining models to be used in the database.
-Core.Query: Used for defining queries to be executed on the database.
-Core.Query.Database: Interfaces with databases. (Currently only MySQL.)
-Core.Query.IQ: Short for Intelligent Query. The system designed to mimic Ruby on Rails' 
-               ActiveRecord functionality.
-Core.Templating: Engine used for templating.
-
-^ All of that is crap, ignore it.
-"""
-
 import os, sys
 
+# Core class.
+# TODO: Improve upon core class.
 class constrictor(object):
   version = "0.0.1"
-  # Defining controllers, models, and queries
+  # Defining controllers.
   controllers = []
   def __init__(self, app):
     # Adds the path to the application to ease importing.
