@@ -9,6 +9,8 @@ class Controller(object):
   #       routing systems.
   Methods = []
   # Example of using the Before and After filters and exposing methods.
+  # * The append() method is used because it's the easiest, clearest, and
+  #   simplest way of doing this, and avoids unnecessary abstraction.
   #@Before.append
   #def my_before_filter(self):
   #  pass

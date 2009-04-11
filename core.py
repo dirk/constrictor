@@ -8,6 +8,7 @@ class Constrictor(object):
   # Sub-classing:
   # - Controller
   from controller import Controller
+  from router import Route
   
   # Listing controllers. Will likely be removed in favor of the routing system,
   # which is in development.
