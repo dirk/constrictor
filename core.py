@@ -1,5 +1,7 @@
 import os, sys
 
+from controller import Expose, Filter
+
 # Core class.
 # TODO: Improve upon core class.
 class Constrictor(object):
