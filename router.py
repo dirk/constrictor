@@ -19,10 +19,12 @@ class Route(object):
     # that controller class.
     return self.func.im_class
   def match(self, url):
+    # Use the compiled regex to match against the URL.
     match = self.route_rec.match(url)
     if match is None:
+      # Did not match.
       return None
     else:
-      # Assume we matched the URL.
+      # The URL matched, grab the params tuple.
       params = match.groups()
       return (self.get_parent_class(), self.func, params)
