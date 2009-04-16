@@ -22,6 +22,9 @@ class Constrictor(object):
     #app_directory, app_file = os.path.split(app.__file__)
     #sys.path.append(os.path.join(app_directory, os.pardir))
     pass
+  def process():
+    # Stub out request processing.
+    pass
   # Stubbing out methods
   def register_controller(self, controller):
     self.controllers.append(controller)
