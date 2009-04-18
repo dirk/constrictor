@@ -68,3 +68,13 @@ class Controller(object):
   #@Expose
   #def my_exposed_method(self):
   #  pass
+  def before_filters(self):
+    for item in dir(self):
+      if not item.startswith('__'):
+        method = self.__getattribute__(item)
+        try:
+          if method.Filter['Type'] is 'Before':
+            print method
+          else: continue
+        except AttributeError: continue
+      else: continue
