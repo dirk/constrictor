@@ -10,12 +10,11 @@ class Constrictor(object):
   # Sub-classing:
   # - Controller
   from controller import Controller
+  # - Route class for routing system
   from router import Route
+  # - Request class used in routing and processing system.
   from request import Request
   
-  # Listing controllers. Will likely be removed in favor of the routing system,
-  # which is in development.
-  controllers = []
   routes = []
   # Initialization
   def __init__(self):
@@ -47,7 +46,16 @@ class Constrictor(object):
     request = self.Request(path, headers, get, post)
     # Instantiate controller to pass to method call.
     controller_instance = controller()
+    # Grab the before and after filters
+    after_filters = controller_instance.after_filters()
+    before_filters = controller_instance.before_filters()
+    # --------------------------------
+    # Actual juicy part of the system.
+    # Process before filters.
+    for func in before_filters:
+      func(request, args)
+    # Call the method itself!
     result = method(controller_instance, request, args)
-  # Stubbing out methods
-  def register_controller(self, controller):
-    self.controllers.append(controller)
+    # Process after filters.
+    for func in after_filters:
+      func(request, args)
