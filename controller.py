@@ -17,42 +17,23 @@ class Filtering(object):
   Priority defines their sort order. Filters are sorted by priority (With 0
   being the lowest priority) and then alphabetically (With "A" coming first).
   """
-  def __init__(self):
-    self.Before.filter = self.filter
-    self.After.filter = self.filter
   def filter(self, func):
     # Checks to make sure that the method has not been exposed, since filters
     # should not be exposed.
     if func.__dict__.has_key('Expose') and func.Expose is True:
       raise AttributeError, 'Method cannot be a filter _and_ be exposed at the same time!'
     func.Expose = False
-  # Classes that handle the decorators.
-  class Before(object):
-    def __init__(self, obj):
-      # It was called like "@Filter.Before" and the obj is the function.
-      if type(obj) is not int:
-        self.filter(self)
-        self.Filter = {'Type': 'Before','Priority': 0}
-      # It was called like "@Filter.Before(x) and the obj is the priority."
-      else:
-        self.priority = obj
-    def __call__(self, func):
-      self.filter(func)
-      func.Filter = {'Type': 'Before','Priority': self.priority}
-      return func
-  class After(object):
-    def __init__(self, obj):
-      # It was called like "@Filter.After" and the obj is the function.
-      if type(obj) is not int:
-        self.filter(self)
-        self.Filter = {'Type': 'After','Priority': 0}
-      # It was called like "@Filter.After(x) and the obj is the priority."
-      else:
-        self.priority = obj
-    def __call__(self, func):
-      self.filter(func)
-      func.Filter = {'Type': 'Before','Priority': self.priority}
-      return func
+  # Functions that handle the decorators.
+  def Before(self, func):
+    self.filter(func)
+    func.Filter = 'Before'
+    func.Priority = 0
+    return func
+  def After(self, func):
+    self.filter(func)
+    func.Filter = 'After'
+    func.Priority = 0
+    return func
   
 # Initialize the Filtering class and put it in the namespace as Filter.
 Filter = Filtering()
@@ -68,13 +49,32 @@ class Controller(object):
   #@Expose
   #def my_exposed_method(self):
   #  pass
+  
+  # TODO: Fix this horrible redundancy.
   def before_filters(self):
+    filters = []
     for item in dir(self):
       if not item.startswith('__'):
         method = self.__getattribute__(item)
         try:
-          if method.Filter['Type'] is 'Before':
-            print method
+          if method.Filter is 'Before':
+            filters.append(method)
           else: continue
         except AttributeError: continue
       else: continue
+    filters.sort(key=lambda obj: (obj.Priority * -1))
+    return filters
+  
+  def after_filters(self):
+    filters = []
+    for item in dir(self):
+      if not item.startswith('__'):
+        method = self.__getattribute__(item)
+        try:
+          if method.Filter is 'After':
+            filters.append(method)
+          else: continue
+        except AttributeError: continue
+      else: continue
+    filters.sort(key=lambda obj: (obj.Priority * -1))
+    return filters
