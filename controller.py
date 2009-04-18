@@ -43,9 +43,11 @@ class Controller(object):
   # Example of using the Before and After filters and exposing methods.
   # * The append() method is used because it's the easiest, clearest, and
   #   simplest way of doing this, and avoids unnecessary abstraction.
-  #@Fitler.Before(priority)
+  #@Filter.Before
   #def my_before_filter(self):
   #  pass
+  #my_before_filter.Priority = 5
+  # ^ Optional priority definition, the higher numbered filters are executed first.
   #@Expose
   #def my_exposed_method(self):
   #  pass
