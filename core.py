@@ -59,3 +59,4 @@ class Constrictor(object):
     # Process after filters.
     for func in after_filters:
       func(request, args)
+    return result

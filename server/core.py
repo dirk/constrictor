@@ -48,11 +48,14 @@ class GetHandler(BaseHTTPRequestHandler):
       'post': parsed_post
     }
     
-    self.instance.process(path.path, self.headers, params['get'], params['post'])
+    status, data = self.instance.process(path.path, self.headers,
+      params['get'], params['post'])
     
-    self.send_response(200)
+    self.send_response(status)
     self.end_headers()
-    #self.wfile.write(message)
+    self.wfile.write(data)
+    
+    print self.request
     
     request_parts = self.requestline.split(' ')
     #print request_parts
