@@ -24,7 +24,6 @@ def func(val):
   a = list(val)
   a.reverse()
   return ''.join(a)
-
 r = Rattler()
 r.render(data2, {
   'g': testclass(),
