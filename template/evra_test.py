@@ -1,8 +1,16 @@
 from evra import EvRa
 
 data = """
+test<%b
+    
+    d = 'test'
+    
+    e = 'testing3'
+    def f():
+      return 'testing4'
+    %>
 <% a = b;b = 'testing2';c = 'data' %>
-<%= a %><%= c %>
+<%= a %><%= f() %>
 """
 
 t = EvRa()

@@ -13,51 +13,53 @@ class EvRa(Template):
     output = ''
     block = None
     scope = variables
-    multiline = False
+    multiline = False;multiline_indent = 0;multiline_expr = ''
+    cont = True
     for line in lines:
       if multiline:
+        # Processing multi-line block system.
         is_closing = line.find('%>')
-        if is_closing is not -1:
-          interpret = line[:is_closing].strip()
-          line = line[is_closing+2:]
-          multiline = False 
-        else:
-          interpret = line
+        if is_closing is -1:
+          multiline_expr += line[multiline_indent:] + '\n'
+          # cont: Tells the standard processing system whether to proceed or
+          #       not. Will be True for the last line of the block.
+          cont = False
           line = ''
-        exprs = re.split('[^\\];', interpret)
-      else:
-        items = re.findall(r'(<%=? )(.+?)((?: %>)|(?:$))', line)
+        else:
+          multiline_expr += line[multiline_indent:(is_closing - 1)]
+          #print multiline_expr.__repr__()
+          exec multiline_expr in globals(), scope
+          line = line[(is_closing + 3):]
+          multiline = False;multiline_indent = 0
+          cont = True
+      if cont is True:
+        # STANDARD PROCESSING SYSTEM
+        # Match for an expression or an output.
+        items = re.findall(r'(<%=? )(.+?) %>', line)
         # items looks something like [('<%', "a = 'b'", ' %>')]
         try:
           for item in items:
-            if item[2].strip() == '':
-              multiline = True
-              eval(item[1], scope, globals())
-              replace = ''
-            elif item[0].strip() == '<%=':
+            if item[0].strip() == '<%=':
               # Direct output
-              #val = self._eval_subexp(item[1], scope)
               val = eval(item[1], scope, globals())
               replace = val
             elif item[0].strip() == '<%':
-              """expr = item[1]
-              closing = item[2]
-              # Test if assignment
-              assign = re.split(r'^([A-z0-9\.\[\]]+) *= *(.+)$', expr)
-              # ----------
-              # Assignment
-              if len(assign) is 4:
-                # assign looks something like ['', 'a', "'b'", '']
-                var = assign[1]
-                val = assign[2]
-                self._assign_obj_value(var, self._eval_subexp(val, scope), scope)"""
-              replaced = re.sub('^[\t ]*', '', item[1])
-              exec replaced in globals(), scope
+              # Execute an expression
+              #replaced = re.sub('^[\t ]*', '', item[1])
+              exec item[1] in globals(), scope
               replace = ''
-            else: replace = ''
+            
             original = ''.join(item)
-            line = line.replace(original, replace)
+            line = line.replace(original + ' %>', replace)
         except IndexError:
           pass
-      output += line + '\n'
+        line += '\n'
+      # Detect if it's a block statement and initiate multi-line block system.
+      pos = line.find(r'<%b')
+      if pos is not -1:
+        multiline = True
+        multiline_indent = pos
+        multiline_expr = line[(pos + 4):]
+        line = line[:pos]
+      output += line
     print output
