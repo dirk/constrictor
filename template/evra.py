@@ -5,7 +5,7 @@ act like Python expressions.
 """
 
 from __init__ import Template
-import re
+import re, copy
 
 class EvRa(Template):
   def render(self, data, variables):
@@ -15,8 +15,54 @@ class EvRa(Template):
     scope = variables
     multiline = False;multiline_indent = 0;multiline_expr = ''
     cont = True
+    loop = False
     for line in lines:
-      if multiline:
+      if not multiline and not block:
+        # Test to see if it's a for loop
+        for_loop_items = re.findall(r'(<% for (\w+) in (\w+): %>)', line)
+        if len(for_loop_items) > 0:
+          item = for_loop_items[0]
+          # Grabbing stuff after the <% for... %>
+          end = line[(line.find(item[0]) + len(item[0])):]
+          # Grabbing stuff before the <% for... %>
+          line = line[:line.find(item[0])]
+          block = {
+            'type': 'for',
+            'list': eval(item[2], scope, globals()),
+            'item': item[1],
+            'content': end + '\n'
+          }
+      if block:
+        if block['type'] is 'for':
+          # Tests if there is an <% end %> in the same line.
+          if end and end.find(r'<% end %>') != -1:
+            end_pos = end.find(r'<% end %>')
+            content = end[:end_pos]
+            after = end[(end_pos + 9):]
+            custom_scope = copy.copy(scope)
+            for item in block['list']:
+              custom_scope[block['item']] = item
+              line += self.render(content, custom_scope)
+            block = None
+            line += after
+          # Otherwise do normal routine.
+          else:
+            pos = line.find(r'<% end %>')
+            if pos is -1:
+              block['content'] += line
+              line = ''
+            else:
+              block['content'] += line[:pos]
+              after = line[(pos + 9):]
+              line = ''
+              custom_scope = copy.copy(scope)
+              for item in block['list']:
+                custom_scope[block['item']] = item
+                line += self.render(block['content'], custom_scope)
+              block = None
+          # Set end to none to prevent further testing of it for later lines.
+          end = None
+      if multiline and not block:
         # Processing multi-line block system.
         is_closing = line.find('%>')
         if is_closing is -1:
@@ -32,7 +78,7 @@ class EvRa(Template):
           line = line[(is_closing + 3):]
           multiline = False;multiline_indent = 0
           cont = True
-      if cont is True:
+      if cont is True and not block:
         # STANDARD PROCESSING SYSTEM
         # Match for an expression or an output.
         items = re.findall(r'(<%=? )(.+?) %>', line)
@@ -50,7 +96,7 @@ class EvRa(Template):
               replace = ''
             
             original = ''.join(item)
-            line = line.replace(original + ' %>', replace)
+            line = line.replace(original + ' %>', str(replace))
         except IndexError:
           pass
         line += '\n'
@@ -62,4 +108,5 @@ class EvRa(Template):
         multiline_expr = line[(pos + 4):]
         line = line[:pos]
       output += line
-    print output
+    #print output
+    return output

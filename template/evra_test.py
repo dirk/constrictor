@@ -9,12 +9,17 @@ test<%b
     def f():
       return 'testing4'
     %>
-<% a = b;b = 'testing2';c = 'data' %>
+<% a = b;b = 'testing2' %>
 <%= a %><%= f() %>
+--
+<% for item in c: %><%= item %><% end %>test
+--
+testing2
 """
 
 t = EvRa()
-t.render(data, {
+print t.render(data, {
   'a': 'test',
-  'b': 'testing'
+  'b': 'testing',
+  'c': [0, 1, 2, 3]
 })
