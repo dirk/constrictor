@@ -52,31 +52,20 @@ class Controller(object):
   #def my_exposed_method(self):
   #  pass
   
-  # FIXME: Fix this horrible redundancy.
+  def _filter_for(self, filter_type):
+    filters = []
+    for item in dir(self):
+      if not item.startswith('__'):
+        method = self.__getattribute__(item)
+        try:
+          if method.Filter is filter_type:
+            filters.append(method)
+          else: continue
+        except AttributeError: continue
+      else: continue
+    filters.sort(key=lambda obj: (obj.Priority * -1))
+    return filters
   def before_filters(self):
-    filters = []
-    for item in dir(self):
-      if not item.startswith('__'):
-        method = self.__getattribute__(item)
-        try:
-          if method.Filter is 'Before':
-            filters.append(method)
-          else: continue
-        except AttributeError: continue
-      else: continue
-    filters.sort(key=lambda obj: (obj.Priority * -1))
-    return filters
-  
+    return self._filter_for('Before')
   def after_filters(self):
-    filters = []
-    for item in dir(self):
-      if not item.startswith('__'):
-        method = self.__getattribute__(item)
-        try:
-          if method.Filter is 'After':
-            filters.append(method)
-          else: continue
-        except AttributeError: continue
-      else: continue
-    filters.sort(key=lambda obj: (obj.Priority * -1))
-    return filters
+    return self._filter_for('After')
