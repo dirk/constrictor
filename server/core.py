@@ -55,7 +55,7 @@ class GetHandler(BaseHTTPRequestHandler):
     self.end_headers()
     self.wfile.write(data)
     
-    print self.request
+    #print self.request
     
     request_parts = self.requestline.split(' ')
     #print request_parts

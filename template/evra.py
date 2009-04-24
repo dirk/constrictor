@@ -2,8 +2,6 @@
 The aim of EValuatedRAttler is to take the ideas of the Rattler templating
 system and tie them to Python's eval statement to allow expressions to truly
 act like Python expressions.
-
-TODO: Add more looping constructs besides just for iterator.
 """
 
 from __init__ import Template

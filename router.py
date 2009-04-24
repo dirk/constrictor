@@ -1,4 +1,5 @@
 import re
+from controller import Controller
 
 class Route(object):
   # Regex to match the actual URL.
@@ -17,7 +18,10 @@ class Route(object):
   def get_parent_class(self):
     # Returns the class of the passed function, making it easy to instantiate
     # that controller class.
-    return self.func.im_class
+    try:
+      return self.func.im_class
+    except AttributeError:
+      return None
   def match(self, url):
     # Use the compiled regex to match against the URL.
     match = self.route_rec.match(url)

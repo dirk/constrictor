@@ -52,7 +52,7 @@ class Controller(object):
   #def my_exposed_method(self):
   #  pass
   
-  # TODO: Fix this horrible redundancy.
+  # FIXME: Fix this horrible redundancy.
   def before_filters(self):
     filters = []
     for item in dir(self):

@@ -37,26 +37,33 @@ class Constrictor(object):
     if not route:
       # It didn't match, raise Exception.
       raise Exception(404, 'Route not matched')
-    # Grab result data from routing.
-    controller = route[0]
-    method = route[1]
-    args = route[2]
     # Set up the request object, will be truly utilized later on, right now 
     # it's only used for providing GET and POST variables
     request = self.Request(path, headers, get, post)
-    # Instantiate controller to pass to method call.
-    controller_instance = controller()
-    # Grab the before and after filters
-    after_filters = controller_instance.after_filters()
-    before_filters = controller_instance.before_filters()
-    # --------------------------------
-    # Actual juicy part of the system.
-    # Process before filters.
-    for func in before_filters:
-      func(request, args)
-    # Call the method itself!
-    result = method(controller_instance, request, args)
-    # Process after filters.
-    for func in after_filters:
-      func(request, args)
+    if route[0] is None:
+      # No controller for method.
+      method = route[1]
+      args = route[2]
+      # Just execute the method.
+      result = method(request, args)
+    else:
+      # Grab result data from routing.
+      controller = route[0]
+      method = route[1]
+      args = route[2]
+      # Instantiate controller to pass to method call.
+      controller_instance = controller()
+      # Grab the before and after filters
+      after_filters = controller_instance.after_filters()
+      before_filters = controller_instance.before_filters()
+      # --------------------------------
+      # Actual juicy part of the system.
+      # Process before filters.
+      for func in before_filters:
+        func(request, args)
+      # Call the method itself!
+      result = method(controller_instance, request, args)
+      # Process after filters.
+      for func in after_filters:
+        func(request, args)
     return result
