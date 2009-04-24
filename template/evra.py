@@ -2,6 +2,8 @@
 The aim of EValuatedRAttler is to take the ideas of the Rattler templating
 system and tie them to Python's eval statement to allow expressions to truly
 act like Python expressions.
+
+TODO: Add more looping constructs besides just for iterator.
 """
 
 from __init__ import Template
@@ -10,15 +12,23 @@ import re, copy
 class EvRa(Template):
   def render(self, data, variables):
     lines = data.split('\n')
-    output = ''
-    block = None
+    # Holds the current namespace
     scope = variables
+    scope['end'] = None
+    # String to be outputted
+    output = ''
+    # If it is a block (EG: for, while), this will hold a dictionary with
+    # mandatory 'type' key and other keys depending on the type of loop.
+    block = None
+    
     multiline = False;multiline_indent = 0;multiline_expr = ''
+    # Used in the multiline expressions
     cont = True
-    loop = False
+    # Primary loop, iterating through the lines
     for line in lines:
+      # Test to see if it's a for or while loop
       if not multiline and not block:
-        # Test to see if it's a for loop
+        # NOTE: For loop has priority over while loop.
         for_loop_items = re.findall(r'(<% for (\w+) in (\w+): %>)', line)
         if len(for_loop_items) > 0:
           item = for_loop_items[0]
@@ -32,38 +42,51 @@ class EvRa(Template):
             'item': item[1],
             'content': end + '\n'
           }
+        else:
+          while_loop_items = re.findall(r'(<% while (.+): %>)', line)
+          if len(while_loop_items) > 0:
+            item = while_loop_items[0]
+            item = while_loop_items[0]
+            # Grabbing stuff after the <% for... %>
+            end = line[(line.find(item[0]) + len(item[0])):]
+            # Grabbing stuff before the <% for... %>
+            line = line[:line.find(item[0])]
+            block = {
+              'type': 'while',
+              'expr': item[1],
+              'content': end + '\n'
+            }
       if block:
-        if block['type'] is 'for':
-          # Tests if there is an <% end %> in the same line.
-          if end and end.find(r'<% end %>') != -1:
-            end_pos = end.find(r'<% end %>')
+        # If it is a block, start parsing the block content.
+        end_block = False
+        pos = line.find(r'<% end %>')
+        # If it's still on the first line.
+        if end:
+          end_pos = end.find(r'<% end %>')
+          if end_pos != -1:
             content = end[:end_pos]
             after = end[(end_pos + 9):]
-            custom_scope = copy.copy(scope)
+            end_block = True
+        elif pos == -1:
+          block['content'] += line
+        else:
+          content = block['content'] + line[:pos]
+          after = line[(pos + 9):];line = ''
+          end_block = True
+        if end_block:
+          # Determine block content and either run for or while loop.
+          if block['type'] is 'for':
             for item in block['list']:
-              custom_scope[block['item']] = item
-              line += self.render(content, custom_scope)
-            block = None
-            line += after
-          # Otherwise do normal routine.
-          else:
-            pos = line.find(r'<% end %>')
-            if pos is -1:
-              block['content'] += line
-              line = ''
-            else:
-              block['content'] += line[:pos]
-              after = line[(pos + 9):]
-              line = ''
-              custom_scope = copy.copy(scope)
-              for item in block['list']:
-                custom_scope[block['item']] = item
-                line += self.render(block['content'], custom_scope)
-              block = None
-          # Set end to none to prevent further testing of it for later lines.
-          end = None
+              scope[block['item']] = item
+              line += self.render(content, scope)
+          elif block['type'] is 'while':
+            while(eval(block['expr'], scope, globals())):
+              line += self.render(content, scope)
+          block = None
+          line += after
+        end = None
+      # Processing multi-line block system.
       if multiline and not block:
-        # Processing multi-line block system.
         is_closing = line.find('%>')
         if is_closing is -1:
           multiline_expr += line[multiline_indent:] + '\n'
@@ -78,9 +101,9 @@ class EvRa(Template):
           line = line[(is_closing + 3):]
           multiline = False;multiline_indent = 0
           cont = True
+      # STANDARD PROCESSING SYSTEM
       if cont is True and not block:
-        # STANDARD PROCESSING SYSTEM
-        # Match for an expression or an output.
+        # Match for an expression "<% %>" or an output "<%= %>".
         items = re.findall(r'(<%=? )(.+?) %>', line)
         # items looks something like [('<%', "a = 'b'", ' %>')]
         try:
@@ -94,7 +117,6 @@ class EvRa(Template):
               #replaced = re.sub('^[\t ]*', '', item[1])
               exec item[1] in globals(), scope
               replace = ''
-            
             original = ''.join(item)
             line = line.replace(original + ' %>', str(replace))
         except IndexError:
@@ -108,5 +130,4 @@ class EvRa(Template):
         multiline_expr = line[(pos + 4):]
         line = line[:pos]
       output += line
-    #print output
     return output

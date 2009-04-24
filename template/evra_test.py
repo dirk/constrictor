@@ -13,13 +13,19 @@ test<%b
 <%= a %><%= f() %>
 --
 <% for item in c: %><%= item %><% end %>test
---
-testing2
+<% test = 0 %>
+<% while test < 10: %><% test += 1 %><%= test %><% end %>
 """
 
 t = EvRa()
-print t.render(data, {
-  'a': 'test',
-  'b': 'testing',
-  'c': [0, 1, 2, 3]
-})
+def test():
+  t.render(data, {
+    'a': 'test',
+    'b': 'testing',
+    'c': [0, 1, 2, 3]
+  })
+
+import cProfile, pstats
+cProfile.run('test()', 'stats')
+p = pstats.Stats('stats')
+p.strip_dirs().sort_stats('cumulative').print_stats(10)
