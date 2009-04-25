@@ -16,7 +16,7 @@ class GetHandler(BaseHTTPRequestHandler):
     self.handle_request()
   def do_HEAD(self):
     self.handle_request()
-  
+  def log_request(self, log): pass
   def handle_request(self):
     """message = '\n'.join([
                 'CLIENT VALUES:',
@@ -36,6 +36,7 @@ class GetHandler(BaseHTTPRequestHandler):
                 ])"""
         
     
+    # TODO: Improve request handling system.
     # Split that path data into the actual path, query-string, etc.
     path = urlparse.urlparse(self.path)
     # Get post variables
@@ -70,5 +71,8 @@ class Server(object):
     server.RequestHandlerClass.parent = self
     if not parse_for_post:
       server.parse_post = False
-    print 'Starting server, use <Ctrl-C> to stop'
-    server.serve_forever()
+    print 'Starting server, use <Ctrl-C> to stop.'
+    try:
+      server.serve_forever()
+    except KeyboardInterrupt:
+      print '\nServer shutdown.'

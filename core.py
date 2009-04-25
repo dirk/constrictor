@@ -4,6 +4,7 @@ from controller import Expose, Filter
 
 # Core class.
 # TODO: Improve upon core class.
+# TODO: Start working on full definition of request handling system.
 class Constrictor(object):
   # Importing version number and representation function.
   import __init__ as version
