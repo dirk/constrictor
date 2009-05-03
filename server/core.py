@@ -36,6 +36,7 @@ class GetHandler(BaseHTTPRequestHandler):
                 ])"""
         
     
+    """
     # TODO: Improve request handling system.
     # Split that path data into the actual path, query-string, etc.
     path = urlparse.urlparse(self.path)
@@ -60,6 +61,37 @@ class GetHandler(BaseHTTPRequestHandler):
     
     request_parts = self.requestline.split(' ')
     #print request_parts
+    return
+    """
+    from constrictor.request import Request
+    
+    # Split that path data into the actual path, query-string, etc.
+    path = urlparse.urlparse(self.path)
+    # Get post variables
+    variables = self.rfile.read(int(self.headers.get('content-length', 0)))
+    # Parse get and post variables and store them in params object.
+    parsed_post = urlparse.parse_qs(variables)
+    parsed_get = urlparse.parse_qs(path.query)
+    params = {
+      'get': parsed_get,
+      'post': parsed_post
+    }
+    # Initialize Request class
+    request = Request()
+    # Assign basic server variables
+    request.path = path.path
+    request.instance = self.instance
+    request.headers = dict(self.headers)
+    request.get = params['get']
+    request.post = params['post']
+    
+    # Stubbing out flags for later usage.
+    flags = {}
+    # Actually process it, the Request will return a status code (EG: 200),
+    # a list of headers, and the actual return content.
+    status, headers, data = request.process(flags)
+    
+    
     return
 class Server(object):
   server = None

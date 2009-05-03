@@ -25,6 +25,8 @@ class Constrictor(object):
     #sys.path.append(os.path.join(app_directory, os.pardir))
     pass
   def process(self, path, headers, get, post):
+    # FIXME: Deprecated in favor of Request-object based processing.
+    
     # Iterate through routes and find which matches
     for route in self.routes:
       route_result = route.match(path)

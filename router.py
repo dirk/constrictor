@@ -16,8 +16,12 @@ class Route(object):
     self.route_rec = re.compile(route)
     self.func = func
   def get_parent_class(self):
-    # Returns the class of the passed function, making it easy to instantiate
-    # that controller class.
+    """
+    Returns the class of the passed function, making it easy to instantiate
+    that controller class.
+    
+    FIXME: Deprecated, should be removed.
+    """
     try:
       return self.func.im_class
     except AttributeError:
@@ -31,4 +35,4 @@ class Route(object):
     else:
       # The URL matched, grab the params tuple.
       params = match.groups()
-      return (self.get_parent_class(), self.func, params)
+      return (self.func, params)
