@@ -22,7 +22,6 @@ class register(object):
   def query(self, query):
     """
     Does the same as register.model except with a Query.
-    
-    TODO: Make this actually be fairly functional.
-    """
+    NOTE: Only takes one Query"""
+    query.mysql = self.mysql
     self.mysql.queries.append(query)

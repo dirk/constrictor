@@ -10,8 +10,9 @@ class Query(object):
   name = 'query'
   
   # Methods:
-  def query(self):
-    """
-    Actually executes the query and processes the database results.
-    """
+  def _query(self, query):
+    """Actually executes the query and processes the database results."""
+    cursor = self.mysql.database.cursor()
+    cursor.execute(query)
+    rows = cursor.fetchall()
       
