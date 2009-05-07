@@ -17,6 +17,17 @@ class Constrictor(object):
   from request import Request
   
   routes = []
+  # Holds the sessions in memory.
+  sessions = []
+  # NOTE: Cookie time formatting: time.strftime('%a, %d-%b-%Y %H:%M:%S GMT')
+  """
+  session = {
+    'id': # md5 hash of random integer and system time.
+    'user_agent': # Actual user-agent, combined with id for verification.
+    'ip_address'
+    'data': {}
+  }
+  """
   # Initialization
   def __init__(self):
     # Adds the path to the application to ease importing.
