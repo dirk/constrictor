@@ -17,67 +17,40 @@ class Constrictor(object):
   from request import Request
   
   routes = []
-  # Holds the sessions in memory.
-  sessions = []
-  # NOTE: Cookie time formatting: time.strftime('%a, %d-%b-%Y %H:%M:%S GMT')
-  """
-  session = {
-    'id': # md5 hash of random integer and system time.
-    'user_agent': # Actual user-agent, combined with id for verification.
-    'ip_address'
-    'data': {}
-  }
-  """
   # Initialization
-  def __init__(self):
+  def __init__(self, config = {}):
     # Adds the path to the application to ease importing.
     # Allows for things like: "from myapp.models import *"
     #app_directory, app_file = os.path.split(app.__file__)
     #sys.path.append(os.path.join(app_directory, os.pardir))
     pass
-  def process(self, path, headers, get, post):
-    # FIXME: Deprecated in favor of Request-object based processing.
-    
+  def process(self, request, flags):
+    method, params = self._match_route(request.path)
+    # See if it is an instance method of a class, and if it is, get that class.
+    try:
+      klass = method.im_class
+    except AttributeError: klass = None
+    if klass:
+      # If you get a class, then instantiate it and call it's bound method.
+      klass_instance = klass()
+      bound_method = klass_instance.__getattribute__(method.__name__)
+      status, data = bound_method(request, params)
+      #print klass_instance.__dict__[method.__name__].__call__(self, params)
+      #print klass.__dict__[method.__name__].__call__(klass, self, params)
+    else:
+      # Otherwise just call the simple method.
+      status, data = method(request, params)
+    # Debugging
+    print status
+    print data
+    return (0,0,0)
+  def _match_route(self, path):
     # Iterate through routes and find which matches
     for route in self.routes:
       route_result = route.match(path)
       if route_result:
-        # If it does match, set route to the route_result and break the loop.
-        route = route_result
-        break
-      # If it doesn't match, set route object to None to raise the exception
-      # if it's the last route.
-      else: route = None
-    if not route:
-      # It didn't match, raise Exception.
-      raise Exception(404, 'Route not matched')
-    # Set up the request object, will be truly utilized later on, right now 
-    # it's only used for providing GET and POST variables
-    request = self.Request(path, headers, get, post)
-    if route[0] is None:
-      # No controller for method.
-      method = route[1]
-      args = route[2]
-      # Just execute the method.
-      result = method(request, args)
-    else:
-      # Grab result data from routing.
-      controller = route[0]
-      method = route[1]
-      args = route[2]
-      # Instantiate controller to pass to method call.
-      controller_instance = controller()
-      # Grab the before and after filters
-      after_filters = controller_instance.after_filters()
-      before_filters = controller_instance.before_filters()
-      # --------------------------------
-      # Actual juicy part of the system.
-      # Process before filters.
-      for func in before_filters:
-        func(request, args)
-      # Call the method itself!
-      result = method(controller_instance, request, args)
-      # Process after filters.
-      for func in after_filters:
-        func(request, args)
-    return result
+        # If it does match, return the route.
+        return route_result
+    # It didn't match, then the pointer will end up here and raise the
+    # route not matched Exception.
+    raise Exception(404, 'Route not matched')

@@ -89,7 +89,7 @@ class GetHandler(BaseHTTPRequestHandler):
     flags = {}
     # Actually process it, the Request will return a status code (EG: 200),
     # a list of headers, and the actual return content.
-    status, headers, data = request.process(flags)
+    status, headers, data = instance.process(request, flags)
     
     
     return
