@@ -1,22 +1,22 @@
-class RequestResponse(object):
-  headers = []
-  data = []
 class Request(object):
   # Stubbing out Request object.
   
   # dict of headers
-  headers = None
+  request_headers = None
+  headers = []
   path = None
   get = None
   post = None
   
   # Actual Constrictor instance
   instance = None
-  # Response instance
-  response = RequestResponse()
   
-  #def __init__(self, path, headers, get, post):
-  #  self.path = path
-  #  self.headers = headers
-  #  self.get = get
-  #  self.post = post
+  session = {}
+  """
+  session = {
+    'id': # md5 hash of random integer and system time.
+    'user_agent': # Actual user-agent, combined with id for verification.
+    'ip_address'
+    'data': {}
+  }
+  """

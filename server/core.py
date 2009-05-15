@@ -1,5 +1,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import urlparse, cgi
+# Used for headers
+import time
 
 class GetHandler(BaseHTTPRequestHandler):
   # Defines if the server should parse for post variables.
@@ -81,17 +83,33 @@ class GetHandler(BaseHTTPRequestHandler):
     # Assign basic server variables
     request.path = path.path
     request.instance = self.instance
-    request.headers = dict(self.headers)
+    request.request_headers = dict(self.headers)
     request.get = params['get']
     request.post = params['post']
-    
-    # Stubbing out flags for later usage.
-    flags = {}
-    # Actually process it, the Request will return a status code (EG: 200),
-    # a list of headers, and the actual return content.
-    status, headers, data = instance.process(request, flags)
-    
-    
+    # If sessions are enabled, tell the request to attempt to retrieve a
+    # session.
+    if self.instance.config['use_sessions']:
+      request.session = self.instance.session.retrieve(request)
+    # Actually process it, the Request will return a status code (EG: 200)
+    # and the actual return content.
+    status, data = self.instance.process(request)
+    # Grab the list of headers from the request object.
+    headers = request.headers
+    # Send the status code
+    self.send_response(status)
+    # Iterate through headers and send them in the response.
+    for header in headers:
+      if type(header) is tuple or type(header) is list:
+        # First item is the keyword, second is the value.
+        print header[0], header[1]
+        self.send_header(header[0], header[1])
+      elif type(header) is dict:
+        self.send_header(header['keyword'], header['value'])
+      else:
+        raise Exception, 'Header is not tuple, list, or dict'
+    # End header sending and output the data.
+    self.end_headers()
+    self.wfile.write(data)
     return
 class Server(object):
   server = None

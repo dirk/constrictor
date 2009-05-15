@@ -15,7 +15,12 @@ class Constrictor(object):
   from router import Route
   # - Request class used in routing and processing system.
   from request import Request
+  from session import Session
+  session = None
   
+  config = {
+    'use_sessions': False
+  }
   routes = []
   # Initialization
   def __init__(self, config = {}):
@@ -23,8 +28,10 @@ class Constrictor(object):
     # Allows for things like: "from myapp.models import *"
     #app_directory, app_file = os.path.split(app.__file__)
     #sys.path.append(os.path.join(app_directory, os.pardir))
-    pass
-  def process(self, request, flags):
+    self.sessions = []
+    self.session = self.Session()
+    for key in config: self.config[key] = config[key]
+  def process(self, request):
     method, params = self._match_route(request.path)
     # See if it is an instance method of a class, and if it is, get that class.
     try:
@@ -35,15 +42,10 @@ class Constrictor(object):
       klass_instance = klass()
       bound_method = klass_instance.__getattribute__(method.__name__)
       status, data = bound_method(request, params)
-      #print klass_instance.__dict__[method.__name__].__call__(self, params)
-      #print klass.__dict__[method.__name__].__call__(klass, self, params)
     else:
       # Otherwise just call the simple method.
       status, data = method(request, params)
-    # Debugging
-    print status
-    print data
-    return (0,0,0)
+    return (status, data)
   def _match_route(self, path):
     # Iterate through routes and find which matches
     for route in self.routes:
