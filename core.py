@@ -19,7 +19,7 @@ class Constrictor(object):
   session = None
   
   config = {
-    'use_sessions': False
+    'use_sessions': False,
   }
   routes = []
   # Initialization

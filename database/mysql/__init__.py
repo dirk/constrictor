@@ -19,11 +19,13 @@ class mysql(object):
   database = None
   models = []
   queries = []
-  def __init__(self, host, username, password, database):
+  def __init__(self, *auto_connect):
     # Establish database connection
+    self.register = register(self)
+    if auto_connect: self.connect(*auto_connect)
+  def connect(self, host, username, password, database):
     self.database = mysqldb.connect(host = host, user = username, 
     passwd = password, db = database)
-    self.register = register(self)
   def query(self, query, smart = True):
     if not smart:
       # Not using intelligent query system. Query and return the cursor object.

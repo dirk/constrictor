@@ -86,6 +86,8 @@ class GetHandler(BaseHTTPRequestHandler):
     request.request_headers = dict(self.headers)
     request.get = params['get']
     request.post = params['post']
+    request.user_agent = self.headers.get('user-agent')
+    request.ip_address = self.client_address[0]
     # If sessions are enabled, tell the request to attempt to retrieve a
     # session.
     if self.instance.config['use_sessions']:

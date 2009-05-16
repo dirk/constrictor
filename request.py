@@ -1,16 +1,20 @@
 class Request(object):
-  # Stubbing out Request object.
-  
-  # dict of headers
-  request_headers = None
+  # Dict of headers sent with the request from the client
+  request_headers = {}
+  # List of headers
   headers = []
+  # Raw path (EG: "/test/abc/123")
   path = None
-  get = None
-  post = None
-  
+  # GET/POST variables
+  get = {}
+  post = {}
+  # User agent of the client
+  user_agent = ''
+  # IP address of client
+  ip_address = ''
   # Actual Constrictor instance
   instance = None
-  
+  # Dictionary to hold session variables, set by the Session system.
   session = {}
   """
   session = {
