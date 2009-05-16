@@ -20,8 +20,6 @@ class register(object):
       if add_to_class:
         model.mysql = self.mysql
   def query(self, query):
-    """
-    Does the same as register.model except with a Query.
-    NOTE: Only takes one Query"""
+    """Does the same as register.model except with a Query. NOTE: Only takes one Query"""
     query.mysql = self.mysql
     self.mysql.queries.append(query)

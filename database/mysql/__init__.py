@@ -22,8 +22,11 @@ class mysql(object):
   def __init__(self, *auto_connect):
     # Establish database connection
     self.register = register(self)
-    if auto_connect: self.connect(*auto_connect)
+    # Only connect if passed 4 parameters
+    # TODO: Add more connection options for greater flexibility.
+    if len(auto_connect) is 4: self.connect(*auto_connect)
   def connect(self, host, username, password, database):
+    "Takes connection parameters and establishes a MySQLdb connection."
     self.database = mysqldb.connect(host = host, user = username, 
     passwd = password, db = database)
   def query(self, query, smart = True):

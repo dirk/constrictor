@@ -15,17 +15,6 @@ class Route(object):
     self.route = route
     self.route_rec = re.compile(route)
     self.func = func
-  def get_parent_class(self):
-    """
-    Returns the class of the passed function, making it easy to instantiate
-    that controller class.
-    
-    FIXME: Deprecated, should be removed.
-    """
-    try:
-      return self.func.im_class
-    except AttributeError:
-      return None
   def match(self, url):
     # Use the compiled regex to match against the URL.
     match = self.route_rec.match(url)
