@@ -20,6 +20,11 @@ class mysql(object):
   models = []
   queries = []
   def __init__(self, *auto_connect):
+    """
+    Optional four arguments (host, username, password, database) are passed
+    to mysql.connect. Allows for auto-connect functionality for less LOC in a
+    single-file application.
+    """
     # Establish database connection
     self.register = register(self)
     # Only connect if passed 4 parameters
@@ -30,6 +35,13 @@ class mysql(object):
     self.database = mysqldb.connect(host = host, user = username, 
     passwd = password, db = database)
   def query(self, query, smart = True):
+    """
+    Queries the database according, optional second parameters tells it
+    whether or not to use smart result interpolation.
+    
+    This type of functionality will soon be deprecated and moved into
+    the IntelligentQuery (IQ) system.
+    """
     if not smart:
       # Not using intelligent query system. Query and return the cursor object.
       cursor = self.database.cursor()
