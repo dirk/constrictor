@@ -1,4 +1,5 @@
 class Request(object):
+  """
   # Dict of headers sent with the request from the client
   request_headers = {}
   # List of headers
@@ -14,13 +15,8 @@ class Request(object):
   ip_address = ''
   # Actual Constrictor instance
   instance = None
-  # Dictionary to hold session variables, set by the Session system.
+  # Instance of the server; used to grab host, port, etc.
+  server_instance = None
+  # Session class
   session = {}
-  """
-  session = {
-    'id': # md5 hash of random integer and system time.
-    'user_agent': # Actual user-agent, combined with id for verification.
-    'ip_address'
-    'data': {}
-  }
   """

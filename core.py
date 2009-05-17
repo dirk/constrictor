@@ -15,7 +15,7 @@ class Constrictor(object):
   from router import Route
   # - Request class used in routing and processing system.
   from request import Request
-  from session import Session
+  from session import SessionStore
   session = None
   
   config = {
@@ -29,7 +29,7 @@ class Constrictor(object):
     #app_directory, app_file = os.path.split(app.__file__)
     #sys.path.append(os.path.join(app_directory, os.pardir))
     self.sessions = []
-    self.session = self.Session()
+    self.session = self.SessionStore(self)
     for key in config: self.config[key] = config[key]
   def process(self, request):
     method, params = self._match_route(request.path)

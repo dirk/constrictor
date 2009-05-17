@@ -83,6 +83,8 @@ class GetHandler(BaseHTTPRequestHandler):
     # Assign basic server variables
     request.path = path.path
     request.instance = self.instance
+    request.server_instance = self
+    request.headers = []
     request.request_headers = dict(self.headers)
     request.get = params['get']
     request.post = params['post']
@@ -103,23 +105,31 @@ class GetHandler(BaseHTTPRequestHandler):
     for header in headers:
       if type(header) is tuple or type(header) is list:
         # First item is the keyword, second is the value.
-        print header[0], header[1]
         self.send_header(header[0], header[1])
       elif type(header) is dict:
         self.send_header(header['keyword'], header['value'])
+      elif type(header) is str:
+        # Just a plain string (EG: 'Content-Type: image/png'), split it into
+        # a two item list and pass that to send_header.
+        self.send_header(*header.split(': ', 1))
       else:
         raise Exception, 'Header is not tuple, list, or dict'
     # End header sending and output the data.
     self.end_headers()
     self.wfile.write(data)
+    
+    del(request)
     return
 class Server(object):
   server = None
   instance = None
   def __init__(self, host, port, instance, parse_for_post = True):
-    server = HTTPServer(('localhost', 8080), GetHandler)
+    server = HTTPServer((host, port), GetHandler)
     self.instance = instance
     server.RequestHandlerClass.instance = instance
+    # FIXME: Host and domain will be difference for a production environment
+    server.RequestHandlerClass.host = host
+    server.RequestHandlerClass.domain = host
     server.RequestHandlerClass.parent = self
     if not parse_for_post:
       server.parse_post = False
