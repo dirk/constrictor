@@ -34,12 +34,11 @@ class Filtering(object):
     func.Filter = 'After'
     func.Priority = 0
     return func
-  
 # Initialize the Filtering class and put it in the namespace as Filter.
 Filter = Filtering()
 
 class Controller(object):
-  """Represents a controller for processing requests."""
+  """A controller for processing requests."""
   # Example of using the Before and After filters and exposing methods.
   # * The append() method is used because it's the easiest, clearest, and
   #   simplest way of doing this, and avoids unnecessary abstraction.
@@ -53,6 +52,10 @@ class Controller(object):
   #  pass
   
   def _filter_for(self, filter_type):
+    """
+    Iterates through the methods of the Controller and finds methods with a
+    Filter attribute that is equal to filter_type.
+    """
     filters = []
     for item in dir(self):
       if not item.startswith('__'):
