@@ -1,6 +1,8 @@
 """
 MySQL backend API for Constrictor. Contains the revolutionary Model-Query 
 systems.
+
+~ Written by Dirk in the early days of Constrictor, left for posterity.
 """
 # Import Python modules.
 import re
@@ -34,61 +36,51 @@ class mysql(object):
     "Takes connection parameters and establishes a MySQLdb connection."
     self.database = mysqldb.connect(host = host, user = username, 
     passwd = password, db = database)
-  def query(self, query, smart = True):
+  def smart_query(self, query, smart = True):
     """
-    Queries the database according, optional second parameters tells it
-    whether or not to use smart result interpolation.
-    
-    This type of functionality will soon be deprecated and moved into
-    the IntelligentQuery (IQ) system.
+    Queries the database according and attempts interpolate the results into
+    model instances.
     """
-    if not smart:
-      # Not using intelligent query system. Query and return the cursor object.
-      cursor = self.database.cursor()
-      cursor.execute(query)
-      return cursor
-    else:
-      # Intelligent query system:
-      # Execute the query and fetch all of the result rows.
-      cursor = self.database.cursor()
-      cursor.execute(query)
-      rows = cursor.fetchall()
-      # Determine the tables fetched from the database
-      tables = self.__determine_tables(query)
-      # Determine the models used from the tables.
-      models = []
-      for table in tables:
-        models.append(self.__find_model(table))
-      result = []
-      # Iterate through the result rows.
-      for row in rows:
-        # Convert the row to a list.
-        row = list(row)
-        # Reverse the row that the first variable will be returned when 
-        # row.pop() is called instead of the last.
-        row.reverse()
-        # If there was more than one model, return each result row as a list.
-        if len(models) > 1: resultobj = []
-        # Iterate through the models from the query.
-        for model in models:
-          # Instantiate a new model.
-          m = model()
-          # Go through each field in the structure.
-          for field in m.structure:
-            # Pop of an item from the row.
-            item = row.pop()
-            m.__setattr__(field.name, field.result(item))
-          # If there was more than one model, add the new model class to the 
-          # result list.
-          if len(models) > 1:
-            resultobj.append(m)
-          else:
-            # Otherwise just use the single model.
-            resultobj = m
-        # Append the result object (list or model)
-        result.append(resultobj)
-      # Return the nice ol' result.
-      return result
+    # Execute the query and fetch all of the result rows.
+    cursor = self.database.cursor()
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    # Determine the tables fetched from the database
+    tables = self.__determine_tables(query)
+    # Determine the models used from the tables.
+    models = []
+    for table in tables:
+      models.append(self.__find_model(table))
+    result = []
+    # Iterate through the result rows.
+    for row in rows:
+      # Convert the row to a list.
+      row = list(row)
+      # Reverse the row that the first variable will be returned when 
+      # row.pop() is called instead of the last.
+      row.reverse()
+      # If there was more than one model, return each result row as a list.
+      if len(models) > 1: resultobj = []
+      # Iterate through the models from the query.
+      for model in models:
+        # Instantiate a new model.
+        m = model()
+        # Go through each field in the structure.
+        for field in m.structure:
+          # Pop of an item from the row.
+          item = row.pop()
+          m.__setattr__(field.name, field.result(item))
+        # If there was more than one model, add the new model class to the 
+        # result list.
+        if len(models) > 1:
+          resultobj.append(m)
+        else:
+          # Otherwise just use the single model.
+          resultobj = m
+      # Append the result object (list or model)
+      result.append(resultobj)
+    # Return the nice ol' result.
+    return result
   def close(self):
     self.database.close()
   # -----------------------
