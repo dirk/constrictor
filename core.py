@@ -1,6 +1,8 @@
 import os, sys
 
 from controller import Expose, Filter
+from session import SessionStore
+from utils import recursive_merge
 
 # Core class.
 # TODO: Improve upon core class.
@@ -15,11 +17,14 @@ class Constrictor(object):
   from router import Route
   # - Request class used in routing and processing system.
   from request import Request
-  from session import SessionStore
+  
   session = None
   
   config = {
-    'use_sessions': False,
+    'Session': {
+      'Use': False,
+      'Store': SessionStore,
+    }
   }
   routes = []
   # Initialization
@@ -28,10 +33,20 @@ class Constrictor(object):
     # Allows for things like: "from myapp.models import *"
     #app_directory, app_file = os.path.split(app.__file__)
     #sys.path.append(os.path.join(app_directory, os.pardir))
+    
+    # Recurively combine the original config with the passed configuration to
+    # overwrite the original keys with any passed in config.
+    recursive_merge(self.config, config)
     self.sessions = []
-    self.session = self.SessionStore(self)
+    # Test if sessions are enabled, and instantiate a instance of the session.
+    if self.config['Session']['Use']:
+      self.session = self.config['Session']['Store'](self)
     for key in config: self.config[key] = config[key]
   def process(self, request):
+    # If sessions are enabled, tell the request to attempt to retrieve a
+    # session.
+    if self.config['Session']['Use']:
+      request.session = self.session.retrieve(request)
     method, params = self._match_route(request.path)
     # See if it is an instance method of a class, and if it is, get that class.
     try:
@@ -45,6 +60,9 @@ class Constrictor(object):
     else:
       # Otherwise just call the simple method.
       status, data = method(request, params)
+    # If sessions are enabled, tell the session storage system to save the
+    # current session.
+    if self.config['Session']['Use']: self.session.save(request.session)
     return (status, data)
   def _match_route(self, path):
     # Iterate through routes and find which matches

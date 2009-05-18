@@ -86,3 +86,10 @@ class SessionStore(object):
   def destroy(self, request, session):
     # Opposite of Session.create.
     pass
+  def save(self, session):
+    """
+    Called at the end of the request by the Constrictor core to save the
+    passed session. Not used in the current instance, but would be useful
+    for a storage engine utilize memcached, MySQL, etc.
+    """
+    pass

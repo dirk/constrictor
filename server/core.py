@@ -90,10 +90,6 @@ class GetHandler(BaseHTTPRequestHandler):
     request.post = params['post']
     request.user_agent = self.headers.get('user-agent')
     request.ip_address = self.client_address[0]
-    # If sessions are enabled, tell the request to attempt to retrieve a
-    # session.
-    if self.instance.config['use_sessions']:
-      request.session = self.instance.session.retrieve(request)
     # Actually process it, the Request will return a status code (EG: 200)
     # and the actual return content.
     status, data = self.instance.process(request)
