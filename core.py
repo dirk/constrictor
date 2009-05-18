@@ -22,9 +22,12 @@ class Constrictor(object):
   
   config = {
     'Session': {
+      # Tells whether Constrictor should even use Sessions.
       'Use': False,
+      # Defines storage engine Constrictor should use.
+      # (EG: memcached and MySQL interfaces)
       'Store': SessionStore,
-    }
+    },
   }
   routes = []
   # Initialization
@@ -48,6 +51,11 @@ class Constrictor(object):
     if self.config['Session']['Use']:
       request.session = self.session.retrieve(request)
     method, params = self._match_route(request.path)
+    # Check if method has Expose attribute that is True.
+    try:
+      if not method.Expose is True: raise AttributeError
+    except AttributeError:
+      raise Exception, 'Method must be exposed!'
     # See if it is an instance method of a class, and if it is, get that class.
     try:
       klass = method.im_class
