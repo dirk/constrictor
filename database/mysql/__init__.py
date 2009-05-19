@@ -15,7 +15,8 @@ from register import register
 # Auto-importing fields to make stuff easier.
 import fields
 # Base model class.
-from model import model
+from model import Model
+from query import Query, IntelligentQuery
 
 class mysql(object):
   database = None

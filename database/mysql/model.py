@@ -1,10 +1,10 @@
-class model(object):
+class Model(object):
   """
   Base model class.
   """
   # Name of the table in the database.
-  table = None
+  Table = None
   # Contains a list of the fields in the table.
-  structure = []
+  Structure = []
   def print_structure(self):
     print self.structure

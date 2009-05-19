@@ -1,3 +1,5 @@
+from inspect import isfunction, ismethod
+
 class register(object):
   """
   Simple class for registering models.
@@ -21,5 +23,5 @@ class register(object):
         model.mysql = self.mysql
   def query(self, query):
     """Does the same as register.model except with a Query. NOTE: Only takes one Query"""
-    query.mysql = self.mysql
+    query.init(self.mysql)
     self.mysql.queries.append(query)
