@@ -23,7 +23,8 @@ class Query(object):
     cursor = cls.mysql.database.cursor()
     cursor.execute(query)
     return cursor.fetchall()
-
+  @classmethod
+  def escape(cls, item): return cls.mysql.database.escape_string(item)
 class IntelligentQuery(Query):
   """
   Extends base Query system and adds more functionality and 'intelligence.'
@@ -61,6 +62,8 @@ class IntelligentQuery(Query):
     # implies truth.
     if single and not kwargs.has_key('always_list'): return ret[0]
     return ret
+  # Alias get as find for those coming from Rails. Just to be nice.
+  find = get
   @classmethod
   def _parse_include(cls, kwargs, ret):
     """
@@ -81,16 +84,14 @@ class IntelligentQuery(Query):
             model = cls.mysql.get_model(field.model)
             if type(include) is str:
               if not include == model.Table: continue
-            elif not include is model:
-              continue
+            elif not include is model: continue
             else: break
         # Grab list of IDs from the result set, then make the list unique.
         foreign_ids = [m.__getattribute__(field.name) for m in ret]
         unique_foreign_ids = cls._unique_list(foreign_ids)
         # Use the IQ of the foreign model to grab the foreign objects.
         children = model.Query.get(*unique_foreign_ids, always_list = True)
-        
-        name = field.name
+        name = field.name # Make things simpler
         if name.endswith('_id'): name = name[:-3]
         # Iterate through result rows and assign the attribute to the child
         # if the IDs match.
@@ -103,12 +104,7 @@ class IntelligentQuery(Query):
   @classmethod
   def _get_all(cls, **kwargs):
     # If conditions are passed (Either as 'where' or 'conditions')
-    try:
-      if kwargs.has_key('where'):
-        conditions = kwargs['where']
-      else: conditions = kwargs['conditions']
-    except KeyError: conditions = None
-    
+    conditions = cls._parse_conditions(kwargs)
     # Build list of fields, and add it to query base
     query_fields = ', '.join([f.name for f in cls.Model.Structure])
     base = 'SELECT %s FROM %s' % (query_fields, cls.Model.Table)
@@ -141,15 +137,49 @@ class IntelligentQuery(Query):
   # Alias first() for get_first() for less characters.
   first = get_first
   @classmethod
-  def _conditions(cls, cons):
+  def _parse_conditions(cls, kwargs):
     "Takes list of conditions and parses them."
-    for con in cons:
-      print con
+    try:
+      # Grab 'dem conditions
+      if kwargs.has_key('where'):
+        conditions = kwargs['where']
+      else: conditions = kwargs['conditions']
+    except KeyError: return None
+    # If it's a string, don't even bother with it.
+    if type(conditions) is str:
+      return conditions
+    else:
+      variables = conditions[1:]
+      conditions = conditions[0]
+      # Go through variables (optionally escape) and sub them into the string
+      for var in variables:
+        if kwargs.has_key('no_escape'):
+          var = cls._format_type(var, False)
+        else: var = cls._format_type(var)
+        #print conditions
+        conditions = conditions.replace('?', str(var), 1)
+      return conditions
+  @classmethod
+  def _format_type(cls, item, escape = True):
+    """
+    Formats:
+    - String: With quotes (Escaped if second param is True, which is default)
+    - Integer (int, float, long): Just the string
+    """
+    t = type(item)
+    if t is str:
+      # Handle string
+      if escape:
+        return '"' + cls.escape(item) + '"'
+      else:
+        return '"' + item + '"'
+    # Y4Is: Yay for integers!
+    elif t is int or t is float or t is long: return item
+    # Give up
+    else: raise TypeError, 'Unformattable type'
   @classmethod
   def _unique_list(cls, l):
     r = []
     for i in l:
       if not i in r: r.append(i)
     return r
-  # Alias get as find for those coming from Rails. Just to be nice.
-  find = get
