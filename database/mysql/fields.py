@@ -32,7 +32,9 @@ class integer(field):
   unsigned = True
   primary = False
   auto_increment = False
-  def __init__(self, name, null = True, unsigned = True, primary = False, auto_increment = False):
+  def __init__(self, name, null = True, unsigned = True, primary = False, \
+    auto_increment = False):
+    # Basic asignments
     self.name = name
     self.null = null
     self.unsigned = unsigned
@@ -51,7 +53,17 @@ class integer(field):
     return int(data)
   def result(self, data):
     return int(data)
-
+class primary(integer):
+  # Eventually make it actually perform like a true primary field.
+  pass
+class foreign(integer):
+  "Represents a foreign key in a model. EG: category_id for a post"
+  name = None
+  model = None
+  def __init__(self, name, model, null = True, unsigned = True):
+    self.name = name
+    self.model = model
+    super(foreign, self).__init__(name, null, unsigned)
 class string(field):
   """
   Basic string field. Doesn't override the default result method since the 

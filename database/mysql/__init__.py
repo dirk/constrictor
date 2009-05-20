@@ -102,14 +102,28 @@ class mysql(object):
     """Iterate through the list of models to find one by table name."""
     # Go through tables and see if their table matches the provided one.
     for model in self.models:
-      if model.table:
-        table = model.table
+      if model.Table:
+        table = model.Table
       else:
         # If no table defined, it tries to extrapolate it from an ideal class
         # name of TableModel (EG: UsersModel)
         table = model.__name__.lower()[:-5]
       if table == name:
         # They match!
+        return model
+  def get_model(self, identifier):
+    """
+    Tries as hard as it can to get the model from either a model or string.
+    Looks in mysql.models if it isn't a model.
+    
+    Please note, the matching is not case-specific.
+    """
+    try:
+      if identifier.ismodel: return identifier
+    except: pass
+    for model in self.models:
+      if model.Table.lower() == identifier.lower() or \
+        model.__name__.lower()[:-5] == identifier.lower():
         return model
     
 # Taken from a tutorial on using the MySQL-Python MySQLdb interface.

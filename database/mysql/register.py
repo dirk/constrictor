@@ -16,7 +16,7 @@ class register(object):
       for m in model:
         self.mysql.models.append(m)
         if add_to_class:
-          model.mysql = self.mysql
+          m.mysql = self.mysql
     else:
       self.mysql.models.append(model)
       if add_to_class:
