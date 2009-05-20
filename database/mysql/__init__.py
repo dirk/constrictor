@@ -16,7 +16,7 @@ from register import register
 import fields
 # Base model class.
 from model import Model
-from query import Query, IntelligentQuery
+from query import Query
 
 class mysql(object):
   database = None

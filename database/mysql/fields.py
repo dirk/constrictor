@@ -50,9 +50,11 @@ class integer(field):
     # Resulting syntax
     return base
   def query(self, data):
-    return int(data)
-  def result(self, data):
-    return int(data)
+    if self.unsigned is True:
+      return int(data)
+    else:
+      return data
+  result = query
 class primary(integer):
   # Eventually make it actually perform like a true primary field.
   pass
@@ -64,6 +66,12 @@ class foreign(integer):
     self.name = name
     self.model = model
     super(foreign, self).__init__(name, null, unsigned)
+  def query(self, data):
+    if type(data) is int:
+      return data
+    else:
+      # TODO: Make it get a primary field, not just default to ID
+      return data.id
 class string(field):
   """
   Basic string field. Doesn't override the default result method since the 
