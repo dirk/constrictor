@@ -43,19 +43,7 @@ class IntelligentQuery(Query):
     Current kwargs: include, limit, always_list
     """
     single = False
-    if type(args[0]) is str: # get('first'[, ...])
-      # Check for keyword first arguments
-      pos = args[0]
-      if pos.lower() == 'first':
-        single = True
-        ret = cls._get_single(**kwargs)
-      elif pos.lower() == 'all':
-        ret = cls._get_all(**kwargs)
-      elif pos.lower() == 'last':
-        single = True
-        raise Exception, 'ImplementationDoesNotExist: Last row functionality'
-      else: raise Exception, 'Position unknown (Not "first", "last", or "all")'
-    else: # get(1[, 2, 3[, ...]])
+    if len(args) > 0: # get(1[, 2, 3[, ...]])
       # Check for ID-based arguments
       if len(args) is 1: single = True
       # Build string of conditions from the list of IDs
@@ -66,20 +54,40 @@ class IntelligentQuery(Query):
       cons = ' OR '.join([(primary.name + ' = ' + str(x)) for x in args])
       kwargs['conditions'] = cons
       ret = cls._get_all(**kwargs)
+    else:
+      ret = cls._get_all(**kwargs)
+    cls._parse_include(kwargs, ret)
+    # always_list flag tells it to always return a list, simply setting it
+    # implies truth.
+    if single and not kwargs.has_key('always_list'): return ret[0]
+    return ret
+  @classmethod
+  def _parse_include(cls, kwargs, ret):
+    """
+    Takes an include (String or Model) statement, fetches all the rows with
+    IDs from the result set, and adds those rows to the result set.
+    
+    TODO: Improve this documentation
+    """
     if kwargs.has_key('include'):
+      # Make include into a list (if it's not) so that it's always iterable.
       if not (kwargs['include'] is list or kwargs['include'] is tuple):
         include = [kwargs['include']]
       else: include = kwargs['include']
       for i in include:
+        # Iterate over each include statement and the fields in the model.
         for field in cls.Model.Structure:
           if type(field) is mysql_fields.foreign:
             model = cls.mysql.get_model(field.model)
-            if type(i) is str:
-              if not i == model.Table: continue
-            else:
-              if not i is model: continue
+            if type(include) is str:
+              if not include == model.Table: continue
+            elif not include is model:
+              continue
+            else: break
+        # Grab list of IDs from the result set, then make the list unique.
         foreign_ids = [m.__getattribute__(field.name) for m in ret]
         unique_foreign_ids = cls._unique_list(foreign_ids)
+        # Use the IQ of the foreign model to grab the foreign objects.
         children = model.Query.get(*unique_foreign_ids, always_list = True)
         
         name = field.name
@@ -91,15 +99,14 @@ class IntelligentQuery(Query):
             # FIXME: Change to primary key instead of ID default
             if child.id == m.__getattribute__(field.name):
               m.__setattr__(name, child)
-    # always_list flag tells it to always return a list, simply setting it
-    # implies truth.
-    if single and not kwargs.has_key('always_list'): return ret[0]
     return ret
   @classmethod
   def _get_all(cls, **kwargs):
-    # FIXME: Make this handle foreign keys and other fun stuff.
+    # If conditions are passed (Either as 'where' or 'conditions')
     try:
-      conditions = kwargs['conditions']
+      if kwargs.has_key('where'):
+        conditions = kwargs['where']
+      else: conditions = kwargs['conditions']
     except KeyError: conditions = None
     
     # Build list of fields, and add it to query base
@@ -125,9 +132,14 @@ class IntelligentQuery(Query):
       ret.append(model)
     return ret
   @classmethod
-  def _get_single(cls, *args, **kwargs):
+  def get_first(cls, **kwargs):
+    # Fetches one row, passes kwargs to _get_all() with appended 'limit' statement.
     kwargs['limit'] = 1
-    return cls._get_all(**kwargs)
+    ret = cls._get_all(**kwargs)
+    cls._parse_include(kwargs, ret)
+    return ret[0]
+  # Alias first() for get_first() for less characters.
+  first = get_first
   @classmethod
   def _conditions(cls, cons):
     "Takes list of conditions and parses them."
