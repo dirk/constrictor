@@ -15,7 +15,7 @@ class Query(object):
     # Either takes the given name or strips the Model off of 'TableModel'
     cls.Table = cls.Model.Table or cls.Model.__name__.lower()[:5]
   @classmethod
-  def _query(cls, query):
+  def query(cls, query):
     """Actually executes the query and processes the database results."""
     cursor = cls.mysql.database.cursor()
     cursor.execute(query)
@@ -98,7 +98,7 @@ class Query(object):
       base += ' LIMIT ' + str(limit)
     except KeyError: pass
     # Execute query
-    rows = cls._query(base)
+    rows = cls.query(base)
     # Building result set
     ret = []
     for r in rows:
@@ -136,13 +136,13 @@ class Query(object):
       # Go through variables (optionally escape) and sub them into the string
       for var in variables:
         if kwargs.has_key('no_escape'):
-          var = cls._format_type(var, False)
-        else: var = cls._format_type(var)
+          var = cls.format_type(var, False)
+        else: var = cls.format_type(var)
         #print conditions
         conditions = conditions.replace('?', str(var), 1)
       return conditions
   @classmethod
-  def _format_type(cls, item, escape = True):
+  def format_type(cls, item, escape = True):
     """
     Formats:
     - String: With quotes (Escaped if second param is True, which is default)

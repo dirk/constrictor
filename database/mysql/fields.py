@@ -67,11 +67,12 @@ class foreign(integer):
     self.model = model
     super(foreign, self).__init__(name, null, unsigned)
   def query(self, data):
-    if type(data) is int:
-      return data
+    if type(data) is int or type(data) is str:
+      return int(data)
     else:
       # TODO: Make it get a primary field, not just default to ID
-      return data.id
+      return int(data.id)
+  result = query
 class string(field):
   """
   Basic string field. Doesn't override the default result method since the 

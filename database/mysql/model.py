@@ -1,4 +1,5 @@
 from copy import copy
+from query import Query
 
 class Model(object):
   """
@@ -23,10 +24,25 @@ class Model(object):
     """
     diff = {}
     for f in self.Structure:
-      curr = f.query(self.__getattribute__(f.name))
-      orig = f.query(self._original[f.name])
+      curr = f.result(self.__getattribute__(f.name))
+      orig = f.result(self._original[f.name])
       if not curr == orig: diff[f.name] = curr
     return diff
+  def save(self):
+    base = 'UPDATE %s SET ' % self.Table
+    diff = self.diff()
+    fields = ''
+    if not diff: return None
+    for key in diff:
+      field = self._get_field_by_name(key)
+      value = field.query(diff[key])
+      fields += ', ' + field.name + ' = ' + Query.format_type(value)
+    base += fields[2:] + ' WHERE id = ' + str(self.id)
+    Query.query(base)
+    return self
+  def _get_field_by_name(self, name):
+    for f in self.Structure:
+      if f.name == name: return f
   def __setattr__(self, key, value):
     # Check to see if all the values in the Structure have been set, and if
     # they have, save a copy in the _original variable.
