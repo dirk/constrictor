@@ -14,28 +14,28 @@ class Model(object):
   Structure = []
   _original = None
   # List of attributes that can be set by mass assignment.
-  Accessible = ['username']
+  Accessible = []
   
-  def __init__(self, attribs = None, silent = True):
-    # Assignment by attribute
+  def __init__(self, attribs = None, silent = True, force = False):
     if type(attribs) is dict:
-      for attr in attribs:
-        if self.Accessible:
-          try:
-            n = self.Accessible.index(attr);del(n)
-            self.__setattr__(attr, attribs[attr])
-          except ValueError:
-            if not silent:
-              error = '"%s" cannot be assigned via mass-assignment' % attr
-              raise Exception, error
-        else:
+      self.attributes(attribs, silent, force)
+  def attributes(self, attribs, silent = True, force = False):
+    # Assignment by attribute
+    for attr in attribs:
+      # Check if the person has defined a list of Accessible attributes,
+      # otherwise just assign 'em all.
+      if self.Accessible and not force:
+        # See if it's in the the Acccessible list.
+        try:
+          n = self.Accessible.index(attr);del(n)
           self.__setattr__(attr, attribs[attr])
-          
-  def print_structure(self):
-    print self.structure
-  
-  def save(self):
-    self.Qu
+        except ValueError:
+          # Either raise an error, or just let it pass silently
+          if not silent:
+            error = '"%s" cannot be assigned via mass-assignment' % attr
+            raise Exception, error
+      else:
+        self.__setattr__(attr, attribs[attr])
   def diff(self):
     """
     Calculates the difference between the original (When first grabbed from the
@@ -43,9 +43,15 @@ class Model(object):
     """
     diff = {}
     for f in self.Structure:
-      curr = f.result(self.__getattribute__(f.name))
-      orig = f.result(self._original[f.name])
-      if not curr == orig: diff[f.name] = curr
+      try:
+        curr = f.result(self.__getattribute__(f.name))
+        orig = f.result(self._original[f.name])
+        if not curr == orig: diff[f.name] = curr
+      except AttributeError:
+        # For some reason, the attribute wasn't in either namespace, so see if
+        # it exists in the current one, and if it does, then it wasn't assigned
+        # in the original and is most definitely a difference.
+        if self.__dict__.has_key(f.name): diff[f.name] = curr
     return diff
   def save(self):
     # If it doesn't have an ID (Either nonexistant or not set), then call the
