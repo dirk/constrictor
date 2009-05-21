@@ -10,9 +10,11 @@ class field(object):
           inserted into the actual model.
   generate: Returns the SQL required to generate the field in the database.
   """
+  null = True
   # All fields require a name corresponding to their name in the table.
-  def __init__(self, name):
+  def __init__(self, name, null = True):
     self.name = name
+    self.null = null
   def generate(self):
     return 'int(11)'
   def query(self, data):

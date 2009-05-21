@@ -5,12 +5,12 @@ class Query(object):
   """
   Extends base Query system and adds more functionality and 'intelligence.'
   """
+  mysql = None
   # Requires a model class to do intro/extrospection.
   Model = None
   Table = None
   @classmethod
-  def init(cls, mysql):
-    cls.mysql = mysql
+  def init(cls):
     cls.Model.Query = cls
     # Either takes the given name or strips the Model off of 'TableModel'
     cls.Table = cls.Model.Table or cls.Model.__name__.lower()[:5]
@@ -19,7 +19,8 @@ class Query(object):
     """Actually executes the query and processes the database results."""
     cursor = cls.mysql.database.cursor()
     cursor.execute(query)
-    return cursor.fetchall()
+    # If it's a query that's expected to return a value (EG: SELECT)
+    if query.strip().lower().startswith('select'): return cursor.fetchall()
   @classmethod
   def get(cls, *args, **kwargs):
     """
@@ -64,10 +65,11 @@ class Query(object):
         for field in cls.Model.Structure:
           if type(field) is mysql_fields.foreign:
             model = cls.mysql.get_model(field.model)
+            # Check to see if either the string matches the table of the model
+            # or if it's passed a model and the models match.
             if type(include) is str:
               if not include == model.Table: continue
-            elif not include is model: continue
-            else: break
+            elif include is model: break
         # Grab list of IDs from the result set, then make the list unique.
         foreign_ids = [m.__getattribute__(field.name) for m in ret]
         unique_foreign_ids = cls._unique_list(foreign_ids)
@@ -102,6 +104,7 @@ class Query(object):
     # Building result set
     ret = []
     for r in rows:
+      # Initialize Model class
       model = cls.Model()
       c = 0
       for f in cls.Model.Structure:
@@ -156,7 +159,7 @@ class Query(object):
       else:
         return '"' + item + '"'
     # Y4Is: Yay for integers!
-    elif t is int or t is float or t is long: return item
+    elif t is int or t is float or t is long: return str(item)
     # Give up
     else: raise TypeError, 'Unformattable type'
   @classmethod
