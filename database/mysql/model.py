@@ -63,6 +63,7 @@ class Model(object):
     diff = self.diff()
     fields = ''
     if not diff: return None
+    # Build field and value list if there is a difference
     for key in diff:
       field = self._get_field_by_name(key)
       value = field.query(diff[key])
