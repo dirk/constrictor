@@ -70,6 +70,7 @@ class Model(object):
       fields += ', ' + field.name + ' = ' + Query.format_type(value)
     base += fields[2:] + ' WHERE id = ' + str(self.id)
     Query.query(base)
+    # Right now, just spit back the instance of self
     return self
   def create(self):
     base = 'INSERT INTO %s ' % self.Table
@@ -77,6 +78,7 @@ class Model(object):
     values = []
     for f in self.Structure:
       try:
+        # Try to get the attribute, else raise an exception if it can't be null.
         name = f.name
         value = Query.format_type(f.query(self.__getattribute__(name)))
         names.append(name);values.append(value)
@@ -84,16 +86,20 @@ class Model(object):
         # TODO: Make check for primary and not default to 'id'
         if not f.null and \
           f.name != 'id': raise Exception, 'Field "%s" cannot be null' % f.name
+    # Build the set of fields and VALUES.
     base += '(%s) ' % (', '.join(names))
     base += 'VALUES (%s)' % (', '.join(values))
+    # Execute and dump the current instance's attribs into the _original.
     self.Query.query(base)
     self._original = self._build_original()
+    # Spit yourself back!
     return self
   new = create
   def _get_field_by_name(self, name):
     for f in self.Structure:
       if f.name == name: return f
   def _build_original(self):
+    # Build a dict of the current instances attribs.
     d = {}
     for f in self.Structure:
       try:
