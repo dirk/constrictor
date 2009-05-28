@@ -13,7 +13,7 @@ import MySQLdb as mysqldb
 # mysql.register.model or mysql.register.query.
 from register import register
 # Auto-importing fields to make stuff easier.
-import fields
+import fields as Fields
 # Base model class.
 from model import Model
 from query import Query

@@ -14,10 +14,12 @@ class register(object):
     # than one model at a time.
     if type(model) is list or type(model) is tuple:
       for m in model:
+        m.Register()
         self.mysql.models.append(m)
         if add_to_class:
           m.mysql = self.mysql
     else:
+      model.Register()
       self.mysql.models.append(model)
       if add_to_class:
         model.mysql = self.mysql

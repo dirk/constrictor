@@ -19,6 +19,21 @@ class Model(object):
   def __init__(self, attribs = None, silent = True, force = False):
     if type(attribs) is dict:
       self.attributes(attribs, silent, force)
+  @classmethod
+  def Register(cls):
+    """
+    Called by mysql.register.model(). Tells the model to process itself and
+    extract its fields into Model.Structure.
+    """
+    f = [mysql_fields.__getattribute__(k) for k in mysql_fields.__dict__]
+    fields = []
+    for key in cls.__dict__:
+      attr = type.__getattribute__(cls, key)
+      if type(attr) in f:
+        fields.append((key, attr))
+    fields.sort(lambda x, y: cmp(x[1].creation_counter, y[1].creation_counter))
+    for name, field in fields: field.name = name
+    cls.Structure = [f[1] for f in fields]
   def attributes(self, attribs, silent = True, force = False):
     # Assignment by attribute
     for attr in attribs:

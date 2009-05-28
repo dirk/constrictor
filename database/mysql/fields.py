@@ -1,5 +1,5 @@
 # Default, cookie-cutter field. (Mainly for reference.)
-class field(object):
+class Field(object):
   """
   Methods:
   query: Gets passed the data to be inserted into an INSERT or UPDATE 
@@ -10,11 +10,17 @@ class field(object):
           inserted into the actual model.
   generate: Returns the SQL required to generate the field in the database.
   """
-  null = True
+  creation_counter = 0
+  name = None
   # All fields require a name corresponding to their name in the table.
-  def __init__(self, name, null = True):
-    self.name = name
-    self.null = null
+  def __init__(self):
+    # Took forever to figure this out, then discovered that Django already did
+    # it... Dangit.
+    self.creation_counter = Field.creation_counter
+    Field.creation_counter += 1
+  def __cmp__(self, other):
+    # Used for sorting fields on Model initialization.
+    return cmp(self.creation_counter, other.creation_counter)
   def generate(self):
     return 'int(11)'
   def query(self, data):
@@ -22,7 +28,7 @@ class field(object):
   def result(self, data):
     return data
 
-class integer(field):
+class Integer(Field):
   """
   Basic integer field. Query and result methods merely perform an int() upon 
   the given data.
@@ -34,14 +40,14 @@ class integer(field):
   unsigned = True
   primary = False
   auto_increment = False
-  def __init__(self, name, null = True, unsigned = True, primary = False, \
+  def __init__(self, null = True, unsigned = True, primary = False, \
     auto_increment = False):
     # Basic asignments
-    self.name = name
     self.null = null
     self.unsigned = unsigned
     self.primary = primary
     self.auto_increment = auto_increment
+    super(Integer, self).__init__()
   def generate(self):
     base = 'int(11)'
     # NULL
@@ -57,17 +63,16 @@ class integer(field):
     else:
       return data
   result = query
-class primary(integer):
+class Primary(Integer):
   # Eventually make it actually perform like a true primary field.
   pass
-class foreign(integer):
+class Foreign(Integer):
   "Represents a foreign key in a model. EG: category_id for a post"
   name = None
   model = None
-  def __init__(self, name, model, null = True, unsigned = True):
-    self.name = name
+  def __init__(self, model, null = True, unsigned = True):
     self.model = model
-    super(foreign, self).__init__(name, null, unsigned)
+    super(Foreign, self).__init__(null, unsigned)
   def query(self, data):
     if type(data) is int or type(data) is str:
       return int(data)
@@ -75,17 +80,17 @@ class foreign(integer):
       # TODO: Make it get a primary field, not just default to ID
       return int(data.id)
   result = query
-class string(field):
+class String(Field):
   """
   Basic string field. Doesn't override the default result method since the 
   database will already send back a string.
   """
   null = True
   length = 255
-  def __init__(self, name, null = True, length = 255):
-    self.name = name
+  def __init__(self, null = True, length = 255):
     self.null = null
     self.length = length
+    super(String, self).__init__()
   def generate(self):
     base = 'varchar(' + str(self.length) + ')'
     # NULL
@@ -97,14 +102,14 @@ class string(field):
     """Doing a str() on the data just to be safe."""
     return str(data)
 
-class boolean(field):
+class Boolean(Field):
   """
   Very basic boolean field.
   """
   null = True
-  def __init__(self, name, null = True):
-    self.name = name
+  def __init__(self, null = True):
     self.null = null
+    super(Boolean, self).__init__()
   def generate(self):
     base = 'tinyint(1)'
     # NULL

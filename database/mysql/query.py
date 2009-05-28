@@ -33,7 +33,7 @@ class Query(object):
       # Build string of conditions from the list of IDs
       for f in cls.Model.Structure:
         # FIXME: Change to primary from integer
-        if type(f) is mysql_fields.integer:
+        if type(f) is mysql_fields.Integer:
           primary = f; break
       cons = ' OR '.join([(primary.name + ' = ' + str(x)) for x in args])
       kwargs['conditions'] = cons
@@ -63,7 +63,7 @@ class Query(object):
       for i in include:
         # Iterate over each include statement and the fields in the model.
         for field in cls.Model.Structure:
-          if type(field) is mysql_fields.foreign:
+          if type(field) is mysql_fields.Foreign:
             model = cls.mysql.get_model(field.model)
             # Check to see if either the string matches the table of the model
             # or if it's passed a model and the models match.
