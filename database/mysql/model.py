@@ -43,6 +43,10 @@ class Model(object):
       type.__delattr__(cls, name)
     # Store the structure
     cls.Structure = [f[1] for f in fields]
+  @classmethod
+  def get_primary(cls):
+    for field in cls.Structure:
+      if type(field) is mysql_fields.Primary: return field
   def attributes(self, attribs, silent = True, force = False):
     # Assignment by attribute
     for attr in attribs:
@@ -107,9 +111,9 @@ class Model(object):
         value = Query.format_type(f.query(self.__getattribute__(name)))
         names.append(name);values.append(value)
       except AttributeError:
-        # TODO: Make check for primary and not default to 'id'
-        if not f.null and \
-          f.name != 'id': raise Exception, 'Field "%s" cannot be null' % f.name
+        primary = self.get_primary()
+        if not f.null and f.name != primary.name:
+          raise Exception, 'Field "%s" cannot be null' % f.name
     # Build the set of fields and VALUES.
     base += '(%s) ' % (', '.join(names))
     base += 'VALUES (%s)' % (', '.join(values))

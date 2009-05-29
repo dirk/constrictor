@@ -5,7 +5,6 @@ from session import SessionStore
 from utils import recursive_merge
 
 # Core class.
-# TODO: Improve upon core class.
 # TODO: Start working on full definition of request handling system.
 class Constrictor(object):
   # Importing version number and representation function.

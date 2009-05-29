@@ -38,14 +38,11 @@ class Integer(Field):
   """
   null = True
   unsigned = True
-  primary = False
   auto_increment = False
-  def __init__(self, null = True, unsigned = True, primary = False, \
-    auto_increment = False):
+  def __init__(self, null = True, unsigned = True, auto_increment = False):
     # Basic asignments
     self.null = null
     self.unsigned = unsigned
-    self.primary = primary
     self.auto_increment = auto_increment
     super(Integer, self).__init__()
   def generate(self):
@@ -65,7 +62,11 @@ class Integer(Field):
   result = query
 class Primary(Integer):
   # Eventually make it actually perform like a true primary field.
-  pass
+  def __init__(self, unsigned = True, auto_increment = True):
+    # Basic asignments
+    self.unsigned = unsigned
+    self.auto_increment = auto_increment
+    super(Integer, self).__init__()
 class Foreign(Integer):
   "Represents a foreign key in a model. EG: category_id for a post"
   name = None
@@ -77,8 +78,8 @@ class Foreign(Integer):
     if type(data) is int or type(data) is str:
       return int(data)
     else:
-      # TODO: Make it get a primary field, not just default to ID
-      return int(data.id)
+      primary = self.model.get_primary()
+      return int(data.__getattribute__(primary.name))
   result = query
 class String(Field):
   """

@@ -113,9 +113,8 @@ class GetHandler(BaseHTTPRequestHandler):
     # End header sending and output the data.
     self.end_headers()
     self.wfile.write(data)
-    
+    # Yayzorz for garbage collection!
     del(request)
-    return
 class Server(object):
   server = None
   instance = None

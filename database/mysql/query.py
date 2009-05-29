@@ -31,10 +31,7 @@ class Query(object):
       # Check for ID-based arguments
       if len(args) is 1: single = True
       # Build string of conditions from the list of IDs
-      for f in cls.Model.Structure:
-        # FIXME: Change to primary from integer
-        if type(f) is mysql_fields.Integer:
-          primary = f; break
+      primary = cls.Model.get_primary()
       cons = ' OR '.join([(primary.name + ' = ' + str(x)) for x in args])
       kwargs['conditions'] = cons
     ret = cls._get_all(**kwargs)
@@ -79,8 +76,11 @@ class Query(object):
         # if the IDs match.
         for m in ret:
           for child in children:
-            # FIXME: Change to primary key instead of ID default
-            if child.id == m.__getattribute__(field.name):
+            # Grab the primary key of the foreign object.
+            foreign_primary = model.get_primary()
+            if child.__getattribute__(foreign_primary.name) == \
+              m.__getattribute__(field.name):
+              # Set the attribute to the result model
               m.__setattr__(name, child)
     return ret
   @classmethod
