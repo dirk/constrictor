@@ -69,7 +69,7 @@ class mysql(object):
         # Instantiate a new model.
         m = model()
         # Go through each field in the structure.
-        for field in m.structure:
+        for field in m.Structure:
           # Pop of an item from the row.
           item = row.pop()
           m.__setattr__(field.name, field.result(item))

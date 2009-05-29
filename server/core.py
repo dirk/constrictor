@@ -18,7 +18,15 @@ class GetHandler(BaseHTTPRequestHandler):
     self.handle_request()
   def do_HEAD(self):
     self.handle_request()
-  def log_request(self, log): pass
+  def log_request(self, status):
+    log = self.client_address[0] + ': "' + self.path + '" '
+    if self.response['core']['controller'] is None:
+      controller = 'Default'
+    else: controller = self.response['core']['controller'].__name__
+    log += '> ' + controller + '.' + self.response['core']['method'].__name__
+    print log
+    #print self.path, self.client_address, self.address_string()
+    #print self.responses
   def handle_request(self):
     """message = '\n'.join([
                 'CLIENT VALUES:',
@@ -38,33 +46,8 @@ class GetHandler(BaseHTTPRequestHandler):
                 ])"""
         
     
-    """
-    # TODO: Improve request handling system.
-    # Split that path data into the actual path, query-string, etc.
-    path = urlparse.urlparse(self.path)
-    # Get post variables
-    variables = self.rfile.read(int(self.headers.get('content-length', 0)))
-    # Parse get and post variables and store them in params object.
-    parsed_post = urlparse.parse_qs(variables)
-    parsed_get = urlparse.parse_qs(path.query)
-    params = {
-      'get': parsed_get,
-      'post': parsed_post
-    }
     
-    status, data = self.instance.process(path.path, self.headers,
-      params['get'], params['post'])
     
-    self.send_response(status)
-    self.end_headers()
-    self.wfile.write(data)
-    
-    #print self.request
-    
-    request_parts = self.requestline.split(' ')
-    #print request_parts
-    return
-    """
     from constrictor.request import Request
     
     # Split that path data into the actual path, query-string, etc.
@@ -92,9 +75,14 @@ class GetHandler(BaseHTTPRequestHandler):
     request.ip_address = self.client_address[0]
     # Actually process it, the Request will return a status code (EG: 200)
     # and the actual return content.
-    status, data = self.instance.process(request)
+    status, data, debug = self.instance.process(request)
     # Grab the list of headers from the request object.
     headers = request.headers
+    # Set up some info. for the log_request() that gets called when
+    # send_response() is called.
+    self.response = {
+      'core': debug
+    }
     # Send the status code
     self.send_response(status)
     # Iterate through headers and send them in the response.

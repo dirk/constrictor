@@ -70,7 +70,12 @@ class Constrictor(object):
     # If sessions are enabled, tell the session storage system to save the
     # current session.
     if self.config['Session']['Use']: self.session.save(request.session)
-    return (status, data)
+    debug = {
+      'controller': klass,
+      'method': method,
+      'args': params
+    }
+    return (status, data, debug)
   def _match_route(self, path):
     # Iterate through routes and find which matches
     for route in self.routes:
