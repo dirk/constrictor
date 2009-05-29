@@ -25,14 +25,23 @@ class Model(object):
     Called by mysql.register.model(). Tells the model to process itself and
     extract its fields into Model.Structure.
     """
+    # Get the list of fields
     f = [mysql_fields.__getattribute__(k) for k in mysql_fields.__dict__]
     fields = []
     for key in cls.__dict__:
+      # Check if the attribute is a field
       attr = type.__getattribute__(cls, key)
       if type(attr) in f:
         fields.append((key, attr))
+    # Sort them by their creation_counter
     fields.sort(lambda x, y: cmp(x[1].creation_counter, y[1].creation_counter))
-    for name, field in fields: field.name = name
+    # Iterate through the fields
+    for name, field in fields:
+      # Assign the name
+      field.name = name
+      # Delete the attribute
+      type.__delattr__(cls, name)
+    # Store the structure
     cls.Structure = [f[1] for f in fields]
   def attributes(self, attribs, silent = True, force = False):
     # Assignment by attribute

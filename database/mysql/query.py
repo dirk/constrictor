@@ -10,7 +10,7 @@ class Query(object):
   Model = None
   Table = None
   @classmethod
-  def init(cls):
+  def Register(cls):
     cls.Model.Query = cls
     # Either takes the given name or strips the Model off of 'TableModel'
     cls.Table = cls.Model.Table or cls.Model.__name__.lower()[:5]
@@ -37,9 +37,7 @@ class Query(object):
           primary = f; break
       cons = ' OR '.join([(primary.name + ' = ' + str(x)) for x in args])
       kwargs['conditions'] = cons
-      ret = cls._get_all(**kwargs)
-    else:
-      ret = cls._get_all(**kwargs)
+    ret = cls._get_all(**kwargs)
     cls._parse_include(kwargs, ret)
     # always_list flag tells it to always return a list, simply setting it
     # implies truth.

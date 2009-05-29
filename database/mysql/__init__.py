@@ -31,6 +31,7 @@ class mysql(object):
     # Establish database connection
     self.register = register(self)
     Query.mysql = self
+    Model.mysql = self
     # Only connect if passed 4 parameters
     # TODO: Add more connection options for greater flexibility.
     if len(auto_connect) is 4: self.connect(*auto_connect)
