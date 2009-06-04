@@ -2,7 +2,7 @@ import os, sys
 
 from controller import Expose, Filter
 from session import SessionStore
-from utils import recursive_merge, get_default_favicon
+from utils import recursive_merge, get_default_favicon, defaults
 
 class Constrictor(object):
   # Importing version number and representation function.
@@ -20,28 +20,27 @@ class Constrictor(object):
       # Tells whether Constrictor should even use Sessions.
       'Use': False,
       'Security': {
-        'Check IP': False,
+        'Check IP': False, # Check IP address during session retrieval?
       },
       # Defines storage engine Constrictor should use.
-      # (EG: memcached and MySQL interfaces)
+      # (EG: SessionStore (local), memcached, MySQL, etc.)
       'Store': SessionStore,
+    },
+    'Security': {
+      # If it should check for an Expose attribute on methods being requested.
+      'Check Expose': False,
     },
     'Favicon': {
       # Allows you set an image (raw data) and content type that will be sent
       # when "/favicon.ico" is requested.
+      # NOTE: This crap is only for the development server.
       'Data': get_default_favicon(),
       'Content-type': 'image/gif'
     },
     'Pages': {
-      404: """
-        <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-        <html><head>
-        <title>404 Not Found</title>
-        </head><body>
-        <h1>Not Found</h1>
-        <p>The requested URL {path} was not found on this server.</p>
-        </body></html>
-      """.replace('        ', ''),
+      404: defaults.Error_404, # Default 404 error page.
+      # Default page for redirects (Used by Request.redirect).
+      'Redirect': defaults.Redirect,
     },
   }
   def __init__(self, config = {}):
@@ -57,11 +56,11 @@ class Constrictor(object):
     # Test if sessions are enabled, and instantiate a instance of the session.
     if self.config['Session']['Use']:
       self.session = self.config['Session']['Store'](self)
-    #for key in config: self.config[key] = config[key]
   def process(self, request):
     # If sessions are enabled, attempt to retrieve a session. (via Request)
     if self.config['Session']['Use']:
       request.session = self.session.retrieve(request) or self.session.create(request)
+    # Get the method and URL segments, else return a 404 to the Server.
     try:
       method, params = self._match_route(request.path)
     except Exception, e:
@@ -71,11 +70,12 @@ class Constrictor(object):
         debug = {'controller': None, 'method': 'Not Found', 'args': ()}
         return (page, debug)
       else: raise Exception, 'Unknown routing error!'
-    # Check if method has Expose attribute that is True.
-    try:
-      if not method.Expose is True: raise AttributeError
-    except AttributeError:
-      raise Exception, 'Method must be exposed!'
+    if self.config['Security']['Check Expose']:
+      # Check if method has Expose attribute that is True.
+      try:
+        if not method.Expose is True: raise AttributeError
+      except AttributeError:
+        raise Exception, 'Method must be exposed!'
     # See if it is an instance method of a class, and if it is, get that class.
     try:
       klass = method.im_class

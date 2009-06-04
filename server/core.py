@@ -1,23 +1,18 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import urlparse, cgi
+import urlparse
 # Used for headers
 import time
 
 from constrictor.request import Request
 
 class GetHandler(BaseHTTPRequestHandler):
-  instance = None
-  parent = None
-  def do_GET(self):
-    self.handle_request()
-  def do_POST(self):
-    self.handle_request()
-  def do_PUT(self):
-    self.handle_request()
-  def do_DELETE(self):
-    self.handle_request()
-  def do_HEAD(self):
-    self.handle_request()
+  instance = None # Constrictor instance
+  parent = None # Parent Server instance
+  def do_GET(self): self.handle_request()
+  def do_POST(self): self.handle_request()
+  def do_PUT(self): self.handle_request()
+  def do_DELETE(self): self.handle_request()
+  def do_HEAD(self): self.handle_request()
   def log_request(self, status):
     try:
       special = self.special
@@ -129,6 +124,10 @@ class GetHandler(BaseHTTPRequestHandler):
     self.end_headers()
     self.wfile.write(data)
 class Server(object):
+  """
+  Actual server object, establishes the HTTPServer instance to handle requests.
+  Catches keyboard interrupt.
+  """
   server = None
   instance = None
   def __init__(self, host, port, instance):
