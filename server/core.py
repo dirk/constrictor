@@ -93,29 +93,15 @@ class GetHandler(BaseHTTPRequestHandler):
         'Content-type',
         self.instance.config['Favicon']['Content-type']))
     else:
-      try:
-        data, debug = self.instance.process(request)
+      data, debug = self.instance.process(request)
+      if debug == 'Special':
+        self.special = True
+      else:
         # Set up some info. for the log_request() that gets called when
         # send_response() is called.
         self.response = {
           'core': debug
         }
-      except Exception, e:
-        if e[0] == 404:
-          print self.client_address[0] + ': "' + self.path + '" > 404: Not Found!'
-          request.status = 404
-          # TODO: Allow changing of 404 message
-          custom_404 = \
-"""
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-<html><head>
-<title>404 Not Found</title>
-</head><body>
-<h1>Not Found</h1>
-<p>The requested URL {path} was not found on this server.</p>
-</body></html>
-"""
-          data = custom_404.replace('{path}', request.path)
     self.send_response(request.status) # Send the status code
     # Iterate through headers and send them in the response.
     for header in request.headers:

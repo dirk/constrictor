@@ -46,8 +46,9 @@ class SessionStore(object):
       # Checks against user_agent and ip_address headers for extra security.
       for session in self.sessions:
         if session.id == cookie['session_id'].value and \
-          session.user_agent == request.user_agent and \
-          session.ip_address == request.ip_address:
+          session.user_agent == request.user_agent:
+            if self.instance.config['Session']['Security']['Check IP']:
+              if session.ip_address != request.ip_address: continue
             session.last_activity = int(time.time())
             return session
     except KeyError: return None
@@ -57,7 +58,9 @@ class SessionStore(object):
     
     Will not add headers to the passed Request object if auto_header is False.
     """
-    if request.session: return request.session
+    try:
+      if request.session: return request.session
+    except: pass
     if not session_id:
       chars = letters + digits
       # Generate random alpha-numeric string.
@@ -72,6 +75,7 @@ class SessionStore(object):
     # browser.
     if auto_header:
       request.headers.append(self.get_headers(request, session))
+    self.sessions.append(session)
     return session
   def get_headers(self, request, session, expire_offset = 1209600):
     # NOTE: 1209600 is two weeks in seconds

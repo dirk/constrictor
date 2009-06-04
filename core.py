@@ -19,6 +19,9 @@ class Constrictor(object):
     'Session': {
       # Tells whether Constrictor should even use Sessions.
       'Use': False,
+      'Security': {
+        'Check IP': False,
+      },
       # Defines storage engine Constrictor should use.
       # (EG: memcached and MySQL interfaces)
       'Store': SessionStore,
@@ -43,12 +46,29 @@ class Constrictor(object):
     # Test if sessions are enabled, and instantiate a instance of the session.
     if self.config['Session']['Use']:
       self.session = self.config['Session']['Store'](self)
-    for key in config: self.config[key] = config[key]
+    #for key in config: self.config[key] = config[key]
   def process(self, request):
     # If sessions are enabled, attempt to retrieve a session. (via Request)
     if self.config['Session']['Use']:
-      request.session = self.session.retrieve(request)
-    method, params = self._match_route(request.path)
+      request.session = self.session.retrieve(request) or self.session.create(request)
+    try:
+      method, params = self._match_route(request.path)
+    except Exception, e:
+      if e[0] == 404:
+        print request.ip_address + ': "' + request.path + '" > 404: Not Found!'
+        request.status = 404
+        # TODO: Allow changing of 404 message
+        custom_404 = \
+"""
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>404 Not Found</title>
+</head><body>
+<h1>Not Found</h1>
+<p>The requested URL {path} was not found on this server.</p>
+</body></html>
+"""
+        return (custom_404.replace('{path}', request.path), 'Special')
     # Check if method has Expose attribute that is True.
     try:
       if not method.Expose is True: raise AttributeError
