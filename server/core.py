@@ -3,9 +3,9 @@ import urlparse, cgi
 # Used for headers
 import time
 
+from constrictor.request import Request
+
 class GetHandler(BaseHTTPRequestHandler):
-  # Defines if the server should parse for post variables.
-  parse_post = True
   instance = None
   parent = None
   def do_GET(self):
@@ -19,14 +19,18 @@ class GetHandler(BaseHTTPRequestHandler):
   def do_HEAD(self):
     self.handle_request()
   def log_request(self, status):
-    log = self.client_address[0] + ': "' + self.path + '" '
-    if self.response['core']['controller'] is None:
-      controller = 'Default'
-    else: controller = self.response['core']['controller'].__name__
-    log += '> ' + controller + '.' + self.response['core']['method'].__name__
-    print log
-    #print self.path, self.client_address, self.address_string()
-    #print self.responses
+    # Damn errors takin' up mah LOC's.
+    try:
+      special = self.special
+    except AttributeError: special = False
+    if status == 200 and not special:
+      # Make sure it's a 200 status (not 404) and that it's not a "special"
+      # request (EG: favicon).
+      log = self.client_address[0] + ': "' + self.path + '" '
+      if self.response['core']['controller'] is None:
+        controller = 'Default'
+      else: controller = self.response['core']['controller'].__name__
+      print log + '> ' + controller + '.' + self.response['core']['method'].__name__
   def handle_request(self):
     """message = '\n'.join([
                 'CLIENT VALUES:',
@@ -46,10 +50,6 @@ class GetHandler(BaseHTTPRequestHandler):
                 ])"""
         
     
-    
-    
-    from constrictor.request import Request
-    
     # Split that path data into the actual path, query-string, etc.
     path = urlparse.urlparse(self.path)
     # Get post variables
@@ -57,36 +57,68 @@ class GetHandler(BaseHTTPRequestHandler):
     # Parse get and post variables and store them in params object.
     parsed_post = urlparse.parse_qs(variables)
     parsed_get = urlparse.parse_qs(path.query)
+    # TODO: Make this less h4x
+    for key in parsed_post:
+      if type(parsed_post[key]) is list:
+        parsed_post[key] = parsed_post[key][0]
+    for key in parsed_get:
+      if type(parsed_get[key]) is list:
+        parsed_get[key] = parsed_get[key][0]
     params = {
       'get': parsed_get,
       'post': parsed_post
     }
-    # Initialize Request class
+    # Initialize Request class and assign variables for use by the core,
+    # controllers, plugins, etc.
     request = Request()
-    # Assign basic server variables
     request.path = path.path
-    request.instance = self.instance
-    request.server_instance = self
+    request.instance = self.instance;request.server_instance = self
+    request.status = 200
+    # Holds list of headers that will be built and eventually returned to
+    # the client.
     request.headers = []
     request.request_headers = dict(self.headers)
-    request.get = params['get']
-    request.post = params['post']
+    # GET and POST params.
+    request.get = params['get'];request.post = params['post']
+    # Used mainly by the Session system.
     request.user_agent = self.headers.get('user-agent')
     request.ip_address = self.client_address[0]
     # Actually process it, the Request will return a status code (EG: 200)
-    # and the actual return content.
-    status, data, debug = self.instance.process(request)
-    # Grab the list of headers from the request object.
-    headers = request.headers
-    # Set up some info. for the log_request() that gets called when
-    # send_response() is called.
-    self.response = {
-      'core': debug
-    }
-    # Send the status code
-    self.send_response(status)
+    # and the actual return content, plus a dict of debugging information.
+    if request.path == '/favicon.ico':
+      # A favicon is "special"!
+      self.special = True
+      data = self.instance.config['Favicon']['Data']
+      request.headers.append((
+        'Content-type',
+        self.instance.config['Favicon']['Content-type']))
+    else:
+      try:
+        data, debug = self.instance.process(request)
+        # Set up some info. for the log_request() that gets called when
+        # send_response() is called.
+        self.response = {
+          'core': debug
+        }
+      except Exception, e:
+        if e[0] == 404:
+          print self.client_address[0] + ': "' + self.path + '" > 404: Not Found!'
+          request.status = 404
+          # TODO: Allow changing of 404 message
+          custom_404 = \
+"""
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>404 Not Found</title>
+</head><body>
+<h1>Not Found</h1>
+<p>The requested URL {path} was not found on this server.</p>
+</body></html>
+"""
+          data = custom_404.replace('{path}', request.path)
+    self.send_response(request.status) # Send the status code
     # Iterate through headers and send them in the response.
-    for header in headers:
+    for header in request.headers:
       if type(header) is tuple or type(header) is list:
         # First item is the keyword, second is the value.
         self.send_header(header[0], header[1])
@@ -101,21 +133,18 @@ class GetHandler(BaseHTTPRequestHandler):
     # End header sending and output the data.
     self.end_headers()
     self.wfile.write(data)
-    # Yayzorz for garbage collection!
-    del(request)
+    del(request) # Yayzorz for garbage collection!
 class Server(object):
   server = None
   instance = None
-  def __init__(self, host, port, instance, parse_for_post = True):
+  def __init__(self, host, port, instance):
     server = HTTPServer((host, port), GetHandler)
     self.instance = instance
     server.RequestHandlerClass.instance = instance
-    # FIXME: Host and domain will be difference for a production environment
+    # FIXME: Host and domain will be different for a production environment
     server.RequestHandlerClass.host = host
     server.RequestHandlerClass.domain = host
     server.RequestHandlerClass.parent = self
-    if not parse_for_post:
-      server.parse_post = False
     print 'Starting server, use <Ctrl-C> to stop.'
     try:
       server.serve_forever()

@@ -4,6 +4,7 @@ class Request(object):
   request_headers = {}
   # List of headers
   headers = []
+  status = 200
   # Raw path (EG: "/test/abc/123")
   path = None
   # GET/POST variables

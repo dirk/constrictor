@@ -8,7 +8,8 @@ from __init__ import Template
 import re, copy
 
 class EvRa(Template):
-  def render(self, data, variables):
+  @classmethod
+  def render(cls, data, variables):
     lines = data.split('\n')
     # Holds the current namespace
     scope = variables
@@ -67,6 +68,7 @@ class EvRa(Template):
             end_block = True
         elif pos == -1:
           block['content'] += line
+          line = ''
         else:
           content = block['content'] + line[:pos]
           after = line[(pos + 9):];line = ''
@@ -76,10 +78,10 @@ class EvRa(Template):
           if block['type'] is 'for':
             for item in block['list']:
               scope[block['item']] = item
-              line += self.render(content, scope)
+              line += cls.render(content, scope)
           elif block['type'] is 'while':
             while(eval(block['expr'], scope, globals())):
-              line += self.render(content, scope)
+              line += cls.render(content, scope)
           block = None
           line += after
         end = None

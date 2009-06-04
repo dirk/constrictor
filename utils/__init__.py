@@ -15,3 +15,12 @@ def set_path(path):
   * Path should normally be the output from os.getcwd() is the calling file.
   """
   sys.path.append(os.path.join(path, os.pardir))
+
+def get_default_favicon():
+  # Default favicon.
+  if __file__.endswith('.pyc'):
+    offset = 18
+  else: offset = 17
+  path = __file__[:-offset]
+  icon = file(path + 'images/favicon.gif', 'r')
+  return ''.join(icon.readlines())

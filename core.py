@@ -2,10 +2,9 @@ import os, sys
 
 from controller import Expose, Filter
 from session import SessionStore
-from utils import recursive_merge
+from utils import recursive_merge, get_default_favicon
 
 # Core class.
-# TODO: Start working on full definition of request handling system.
 class Constrictor(object):
   # Importing version number and representation function.
   import __init__ as version
@@ -27,10 +26,16 @@ class Constrictor(object):
       # (EG: memcached and MySQL interfaces)
       'Store': SessionStore,
     },
+    'Favicon': {
+      'Data': get_default_favicon(),
+      'Content-type': 'image/gif'
+    }
   }
   routes = []
   # Initialization
   def __init__(self, config = {}):
+    
+    
     # Adds the path to the application to ease importing.
     # Allows for things like: "from myapp.models import *"
     #app_directory, app_file = os.path.split(app.__file__)
@@ -63,19 +68,17 @@ class Constrictor(object):
       # If you get a class, then instantiate it and call it's bound method.
       klass_instance = klass()
       bound_method = klass_instance.__getattribute__(method.__name__)
-      status, data = bound_method(request, params)
+      for f in klass_instance.before_filters(): f(request, params)
+      data = bound_method(request, params)
+      for f in klass_instance.after_filters(): f(request, params)
     else:
       # Otherwise just call the simple method.
-      status, data = method(request, params)
+      data = method(request, params)
     # If sessions are enabled, tell the session storage system to save the
     # current session.
     if self.config['Session']['Use']: self.session.save(request.session)
-    debug = {
-      'controller': klass,
-      'method': method,
-      'args': params
-    }
-    return (status, data, debug)
+    debug = {'controller': klass, 'method': method, 'args': params}
+    return (data, debug)
   def _match_route(self, path):
     # Iterate through routes and find which matches
     for route in self.routes:
