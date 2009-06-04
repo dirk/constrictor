@@ -27,8 +27,7 @@ class Constrictor(object):
       'Store': SessionStore,
     },
     'Security': {
-      # If it should check for an Expose attribute on methods being requested.
-      'Check Expose': False,
+      'Check Expose': False, # Check for Expose attribute on requested method?
     },
     'Favicon': {
       # Allows you set an image (raw data) and content type that will be sent
