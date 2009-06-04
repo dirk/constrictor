@@ -31,7 +31,18 @@ class Constrictor(object):
       # when "/favicon.ico" is requested.
       'Data': get_default_favicon(),
       'Content-type': 'image/gif'
-    }
+    },
+    'Pages': {
+      404: """
+        <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+        <html><head>
+        <title>404 Not Found</title>
+        </head><body>
+        <h1>Not Found</h1>
+        <p>The requested URL {path} was not found on this server.</p>
+        </body></html>
+      """.replace('        ', ''),
+    },
   }
   def __init__(self, config = {}):
     # Adds the path to the application to ease importing.
@@ -55,20 +66,11 @@ class Constrictor(object):
       method, params = self._match_route(request.path)
     except Exception, e:
       if e[0] == 404:
-        print request.ip_address + ': "' + request.path + '" > 404: Not Found!'
+        print request.ip_address + '-404: "' + request.path + '" > Not Found!'
         request.status = 404
-        # TODO: Allow changing of 404 message
-        custom_404 = \
-"""
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-<html><head>
-<title>404 Not Found</title>
-</head><body>
-<h1>Not Found</h1>
-<p>The requested URL {path} was not found on this server.</p>
-</body></html>
-"""
-        return (custom_404.replace('{path}', request.path), 'Special')
+        return (self.config['Pages'][404].replace('{path}', request.path), \
+          'Special')
+      else: raise Exception, 'Unknown routing error!'
     # Check if method has Expose attribute that is True.
     try:
       if not method.Expose is True: raise AttributeError

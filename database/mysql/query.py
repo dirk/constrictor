@@ -24,7 +24,7 @@ class Query(object):
   @classmethod
   def get(cls, *args, **kwargs):
     """
-    Current kwargs: include, limit, always_list
+    Current kwargs: conditions, limit, offset, order, always_list
     """
     single = False
     if len(args) > 0: # get(1[, 2, 3[, ...]])
@@ -92,10 +92,18 @@ class Query(object):
     base = 'SELECT %s FROM %s' % (query_fields, cls.Model.Table)
     # Handle conditions string and add it to query
     if conditions: base += ' WHERE ' + conditions
+    try:
+      order = kwargs['order']
+      base += ' ORDER BY ' + order
+    except KeyError: pass
     # Handle limit numbers
     try:
       limit = kwargs['limit']
       base += ' LIMIT ' + str(limit)
+      try:
+        offset = kwargs['offset']
+        base += ' OFFSET ' + str(offset)
+      except KeyError: pass
     except KeyError: pass
     # Execute query
     rows = cls.query(base)

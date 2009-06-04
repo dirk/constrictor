@@ -21,3 +21,8 @@ class Request(object):
   # Session class
   session = {}
   """
+  def redirect(self, location, status = 302):
+    self.headers.append('Location: ' + location.strip())
+    self.status = status
+    return 'You are being redirected.'
+    

@@ -19,18 +19,18 @@ class GetHandler(BaseHTTPRequestHandler):
   def do_HEAD(self):
     self.handle_request()
   def log_request(self, status):
-    # Damn errors takin' up mah LOC's.
     try:
       special = self.special
     except AttributeError: special = False
-    if status == 200 and not special:
+    if not special:
       # Make sure it's a 200 status (not 404) and that it's not a "special"
       # request (EG: favicon).
-      log = self.client_address[0] + ': "' + self.path + '" '
+      log = self.request.ip_address + '-' + str(self.request.status) + ': "' \
+        + self.path + '" '
       if self.response['core']['controller'] is None:
-        controller = 'Default'
-      else: controller = self.response['core']['controller'].__name__
-      print log + '> ' + controller + '.' + self.response['core']['method'].__name__
+        controller = ''
+      else: controller = self.response['core']['controller'].__name__ + '.'
+      print log + '> ' + controller + self.response['core']['method'].__name__
   def handle_request(self):
     """message = '\n'.join([
                 'CLIENT VALUES:',
@@ -70,7 +70,7 @@ class GetHandler(BaseHTTPRequestHandler):
     }
     # Initialize Request class and assign variables for use by the core,
     # controllers, plugins, etc.
-    request = Request()
+    request = Request();self.request = request
     request.path = path.path
     request.instance = self.instance;request.server_instance = self
     request.status = 200
@@ -119,7 +119,6 @@ class GetHandler(BaseHTTPRequestHandler):
     # End header sending and output the data.
     self.end_headers()
     self.wfile.write(data)
-    del(request) # Yayzorz for garbage collection!
 class Server(object):
   server = None
   instance = None
