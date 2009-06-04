@@ -17,10 +17,12 @@ def set_path(path):
   sys.path.append(os.path.join(path, os.pardir))
 
 def get_default_favicon():
-  # Default favicon.
+  # Retrieve the data from the default favicon file.
   if __file__.endswith('.pyc'):
     offset = 18
   else: offset = 17
+  # Get the root Constrictor directory.
   path = __file__[:-offset]
   icon = file(path + 'images/favicon.gif', 'r')
-  return ''.join(icon.readlines())
+  data = ''.join(icon.readlines());icon.close()
+  return data

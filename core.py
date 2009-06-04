@@ -4,20 +4,17 @@ from controller import Expose, Filter
 from session import SessionStore
 from utils import recursive_merge, get_default_favicon
 
-# Core class.
 class Constrictor(object):
   # Importing version number and representation function.
   import __init__ as version
   # Sub-classing:
-  # - Controller
   from controller import Controller
-  # - Route class for routing system
   from router import Route
   # - Request class used in routing and processing system.
   from request import Request
   
-  session = None
-  
+  session = None # Will hold the session storage object.
+  routes = [] # List of routes
   config = {
     'Session': {
       # Tells whether Constrictor should even use Sessions.
@@ -27,15 +24,13 @@ class Constrictor(object):
       'Store': SessionStore,
     },
     'Favicon': {
+      # Allows you set an image (raw data) and content type that will be sent
+      # when "/favicon.ico" is requested.
       'Data': get_default_favicon(),
       'Content-type': 'image/gif'
     }
   }
-  routes = []
-  # Initialization
   def __init__(self, config = {}):
-    
-    
     # Adds the path to the application to ease importing.
     # Allows for things like: "from myapp.models import *"
     #app_directory, app_file = os.path.split(app.__file__)
@@ -50,8 +45,7 @@ class Constrictor(object):
       self.session = self.config['Session']['Store'](self)
     for key in config: self.config[key] = config[key]
   def process(self, request):
-    # If sessions are enabled, tell the request to attempt to retrieve a
-    # session.
+    # If sessions are enabled, attempt to retrieve a session. (via Request)
     if self.config['Session']['Use']:
       request.session = self.session.retrieve(request)
     method, params = self._match_route(request.path)
@@ -65,9 +59,10 @@ class Constrictor(object):
       klass = method.im_class
     except AttributeError: klass = None
     if klass:
-      # If you get a class, then instantiate it and call it's bound method.
+      # Instantiate the instance and retrieve its bound method.
       klass_instance = klass()
       bound_method = klass_instance.__getattribute__(method.__name__)
+      # Go through filters, actual method is sandwhiched in between.
       for f in klass_instance.before_filters(): f(request, params)
       data = bound_method(request, params)
       for f in klass_instance.after_filters(): f(request, params)
