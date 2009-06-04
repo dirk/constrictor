@@ -66,10 +66,10 @@ class Constrictor(object):
       method, params = self._match_route(request.path)
     except Exception, e:
       if e[0] == 404:
-        print request.ip_address + '-404: "' + request.path + '" > Not Found!'
         request.status = 404
-        return (self.config['Pages'][404].replace('{path}', request.path), \
-          'Special')
+        page = self.config['Pages'][404].replace('{path}', request.path)
+        debug = {'controller': None, 'method': 'Not Found', 'args': ()}
+        return (page, debug)
       else: raise Exception, 'Unknown routing error!'
     # Check if method has Expose attribute that is True.
     try:

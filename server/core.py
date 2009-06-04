@@ -25,12 +25,16 @@ class GetHandler(BaseHTTPRequestHandler):
     if not special:
       # Make sure it's a 200 status (not 404) and that it's not a "special"
       # request (EG: favicon).
-      log = self.request.ip_address + '-' + str(self.request.status) + ': "' \
-        + self.path + '" '
+      log = self.request.ip_address + ' - ' + str(self.request.status) + \
+        ': "' + self.path + '" '
       if self.response['core']['controller'] is None:
         controller = ''
       else: controller = self.response['core']['controller'].__name__ + '.'
-      print log + '> ' + controller + self.response['core']['method'].__name__
+      # NOTE: Method can either be a string or a method (get method.__name__)
+      if type(self.response['core']['method']) is str:
+        method = self.response['core']['method']
+      else: method = self.response['core']['method'].__name__
+      print log + '> ' + controller + method
   def handle_request(self):
     """message = '\n'.join([
                 'CLIENT VALUES:',
@@ -83,16 +87,21 @@ class GetHandler(BaseHTTPRequestHandler):
     # Used mainly by the Session system.
     request.user_agent = self.headers.get('user-agent')
     request.ip_address = self.client_address[0]
-    # Actually process it, the Request will return a status code (EG: 200)
-    # and the actual return content, plus a dict of debugging information.
+    
+    special = False
     if request.path == '/favicon.ico':
-      # A favicon is "special"!
+      # Set it to special, because you don't want that to show up in your
+      # development console.
       self.special = True
       data = self.instance.config['Favicon']['Data']
       request.headers.append((
         'Content-type',
         self.instance.config['Favicon']['Content-type']))
     else:
+      # Actually process it, the Constrictor instance will return the raw data
+      # plus some debugging information; which either holds data about the
+      # request for logging, or a "Special" flag to tell the server to forget
+      # about it (no logging/reporting to console).
       data, debug = self.instance.process(request)
       if debug == 'Special':
         self.special = True
