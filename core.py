@@ -86,12 +86,18 @@ class Constrictor(object):
       # Instantiate the instance and retrieve its bound method.
       klass_instance = klass()
       bound_method = klass_instance.__getattribute__(method.__name__)
+      request.method = bound_method
       # Go through filters, actual method is sandwhiched in between.
-      for f in klass_instance.before_filters(): f(request, params)
-      data = bound_method(request, params)
-      for f in klass_instance.after_filters(): f(request, params)
+      for f in klass_instance.before_filters():
+        ret = f(request, params)
+        if ret:
+          data = ret; break
+      if not ret:
+        data = bound_method(request, params)
+        for f in klass_instance.after_filters(): f(request, params)
     else:
       # Otherwise just call the simple method.
+      request.method = method
       data = method(request, params)
     # If sessions are enabled, tell the session storage system to save the
     # current session.

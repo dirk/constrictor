@@ -20,6 +20,8 @@ class Request(object):
   server_instance = None
   # Session class
   session = {}
+  # Actual method being executed, set during Constrictor.process.
+  method = None
   """
   def redirect(self, location, status = 302):
     self.headers.append('Location: ' + location.strip())
