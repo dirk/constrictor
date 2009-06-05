@@ -22,7 +22,7 @@ class Field(object):
     # Used for sorting fields on Model initialization.
     return cmp(self.creation_counter, other.creation_counter)
   def generate(self):
-    return 'int(11)'
+    return 'bigint(20)'
   def query(self, data):
     return data
   def result(self, data):
@@ -46,7 +46,7 @@ class Integer(Field):
     self.auto_increment = auto_increment
     super(Integer, self).__init__()
   def generate(self):
-    base = 'int(11)'
+    base = 'bigint(20)'
     # NULL
     if self.null: base += ' NULL'
     else: base += ' NOT NULL'
@@ -64,6 +64,7 @@ class Primary(Integer):
   # Eventually make it actually perform like a true primary field.
   def __init__(self, unsigned = True, auto_increment = True):
     # Basic asignments
+    self.null = False
     self.unsigned = unsigned
     self.auto_increment = auto_increment
     super(Integer, self).__init__()
@@ -75,8 +76,10 @@ class Foreign(Integer):
     self.model = model
     super(Foreign, self).__init__(null, unsigned)
   def query(self, data):
-    if type(data) is int or type(data) is str:
+    if type(data) is int or type(data) is str or type(data) is long:
       return int(data)
+    elif data is None:
+      return None
     else:
       primary = self.model.get_primary()
       return int(data.__getattribute__(primary.name))
@@ -102,7 +105,18 @@ class String(Field):
   def query(self, data):
     """Doing a str() on the data just to be safe."""
     return str(data)
-
+class Text(Field):
+  null = True
+  def __init__(self, null = True):
+    self.null = null
+    super(Text, self).__init__()
+  def generate(self):
+    base = 'text'
+    if self.null: base += ' NULL'
+    else: base += ' NOT NULL'
+    # Resulting syntax
+    return base
+  def query(self, data): return str(data)
 class Boolean(Field):
   """
   Very basic boolean field.

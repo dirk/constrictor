@@ -17,6 +17,7 @@ class Model(object):
   Accessible = []
   
   def __init__(self, attribs = None, silent = True, force = False):
+    for f in self.Structure: self.__setattr__(f.name, '')
     if type(attribs) is dict:
       self.attributes(attribs, silent, force)
   @classmethod
@@ -69,6 +70,7 @@ class Model(object):
     Calculates the difference between the original (When first grabbed from the
     database) and the current version.
     """
+    self.reset_associations()
     diff = {}
     for f in self.Structure:
       try:
@@ -100,6 +102,19 @@ class Model(object):
     Query.query(base)
     # Right now, just spit back the instance of self
     return self
+  def reset_associations(self):
+    for f in self.Structure:
+      if type(f) is mysql_fields.Foreign:
+        if f.name.endswith('_id') and self.__dict__.has_key(f.name[:-3]):
+          if self._original:
+            # If the original foreign object and the new one don't match, then
+            # the old one has been overridden, and reflect that by applying it
+            # to the Model.object_id.
+            if self._original.has_key(f.name[:-3]):
+              if self._original(f.name[:-3]) != self.__dict__[f.name[:-3]]:
+                self.__setattribute__(f.name, self.__dict__[f.name[:-3]].id)
+            else:
+              self.__setattribute__(f.name, self.__dict__[f.name[:-3]].id)
   def create(self):
     base = 'INSERT INTO %s ' % self.Table
     names = []
