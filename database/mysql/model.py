@@ -28,7 +28,7 @@ class Model(object):
       if type(field) is mysql_fields.Primary:
         type.__delattr__(cls, name)
       else:
-        if field.__dict__.has_key('null') and field.null is True:
+        if field.null is True:
           type.__setattr__(cls, field.name, None)
         else:
           type.__setattr__(cls, field.name, field.empty())
@@ -118,14 +118,10 @@ class Model(object):
           elif self.__getattribute__(f.name) != self._original[f.name]:
             diff[f.name] = self.__getattribute__(f.name)
       except AttributeError:
-        exception = 'Field "%s" cannot be null!' % f.name
-        if f.__dict__.has_key('null'):
-          if f.null is False:
-            raise Exception, exception
-          else:
-            diff[f.name] = 'NULL'
+        if f.null is False:
+          raise Exception, 'Field "%s" cannot be null!' % f.name
         else:
-          raise Exception, exception 
+          diff[f.name] = 'NULL'
     return diff
   def create(self):
     diff = self.get_create_dict()
@@ -152,14 +148,10 @@ class Model(object):
         else:
           ret[f.name] = value
       except AttributeError:
-        exception = 'Field "%s" cannot be null!' % f.name
-        if f.__dict__.has_key('null'):
-          if f.null is False:
-            raise Exception, exception
-          else:
-            ret[f.name] = 'NULL'
+        if f.null is False:
+          raise Exception, 'Field "%s" cannot be null!' % f.name
         else:
-          raise Exception, exception
+          ret[f.name] = 'NULL'
     return ret
   @classmethod
   def _parse_items(cls, items, options):
@@ -223,12 +215,15 @@ class Model(object):
     Formats:
     - String: With quotes (Escaped if second param is True, which is default)
     - Integer (int, float, long): Just the string
+    - None or 'null': 'NULL
     """
     t = type(item)
-    if t is str:
+    if item is None:
+      return 'NULL'
+    elif t is str:
       # Handle string
       if item.lower() == 'null':
-        return item
+        return 'NULL'
       elif escape:
         return '"' + cls.escape(item) + '"'
       else:
