@@ -2,13 +2,9 @@
 class Field(object):
   """
   Methods:
-  query: Gets passed the data to be inserted into an INSERT or UPDATE 
-         MySQL query. Expected to return data formatted for proper 
-         querying.
-  result: Gets passed the raw data from the MySQL query. Expected to 
-          return a properly process/formatted piece of data to be 
-          inserted into the actual model.
   generate: Returns the SQL required to generate the field in the database.
+  empty: Returns the appropriate object (integer, string, etc.) for an empty
+         field. Used when creating a new model.
   """
   creation_counter = 0
   name = None
@@ -21,21 +17,9 @@ class Field(object):
   def __cmp__(self, other):
     # Used for sorting fields on Model initialization.
     return cmp(self.creation_counter, other.creation_counter)
-  def generate(self):
-    return 'bigint(20)'
-  def query(self, data):
-    return data
-  def result(self, data):
-    return data
-
+  def generate(self): pass
+  def empty(self): pass
 class Integer(Field):
-  """
-  Basic integer field. Query and result methods merely perform an int() upon 
-  the given data.
-  
-  Properties: null (boolean), unsigned (boolean), primary (boolean), 
-              auto_increment (boolean)
-  """
   null = True
   unsigned = True
   auto_increment = False
@@ -54,12 +38,7 @@ class Integer(Field):
     if self.auto_increment: base += ' auto_increment'
     # Resulting syntax
     return base
-  def query(self, data):
-    if self.unsigned is True:
-      return int(data)
-    else:
-      return data
-  result = query
+  def empty(self): return 0
 class Primary(Integer):
   # Eventually make it actually perform like a true primary field.
   def __init__(self, unsigned = True, auto_increment = True):
@@ -75,15 +54,6 @@ class Foreign(Integer):
   def __init__(self, model, null = True, unsigned = True):
     self.model = model
     super(Foreign, self).__init__(null, unsigned)
-  def query(self, data):
-    if type(data) is int or type(data) is str or type(data) is long:
-      return int(data)
-    elif data is None:
-      return None
-    else:
-      primary = self.model.get_primary()
-      return int(data.__getattribute__(primary.name))
-  result = query
 class String(Field):
   """
   Basic string field. Doesn't override the default result method since the 
@@ -102,9 +72,7 @@ class String(Field):
     else: base += ' NOT NULL'
     # Resulting syntax
     return base
-  def query(self, data):
-    """Doing a str() on the data just to be safe."""
-    return str(data)
+  def empty(self): return ''
 class Text(Field):
   null = True
   def __init__(self, null = True):
@@ -116,7 +84,7 @@ class Text(Field):
     else: base += ' NOT NULL'
     # Resulting syntax
     return base
-  def query(self, data): return str(data)
+  def empty(self): return ''
 class Boolean(Field):
   """
   Very basic boolean field.
@@ -125,37 +93,4 @@ class Boolean(Field):
   def __init__(self, null = True):
     self.null = null
     super(Boolean, self).__init__()
-  def generate(self):
-    base = 'tinyint(1)'
-    # NULL
-    if self.null: base += ' NULL'
-    else: base += ' NOT NULL'
-    # Resulting syntax
-    return base
-  def query(self, data):
-    # First, try to boolean it (to catch "True", "False", "T", and "F", 
-    # which int doesn't catch), then int it for insertion into the database.
-    try:
-      data = bool(data)
-    finally:
-      return int(data)
-  def result(self, data):
-    if int(data): return True
-    else: return False
-# This is derived from some database. I don't remember where; but it's here 
-# for reference.
-"""
-`id` int(11) NOT NULL auto_increment,
-  `username` varchar(30) NOT NULL,
-  `first_name` varchar(30) NOT NULL,
-  `last_name` varchar(30) NOT NULL,
-  `email` varchar(75) NOT NULL,
-  `password` varchar(128) NOT NULL,
-  `is_staff` tinyint(1) NOT NULL,
-  `is_active` tinyint(1) NOT NULL,
-  `is_superuser` tinyint(1) NOT NULL,
-  `last_login` datetime NOT NULL,
-  `date_joined` datetime NOT NULL,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `username` (`username`)
-"""
+  def empty(self): return False
