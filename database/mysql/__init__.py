@@ -45,3 +45,12 @@ class mysql(object):
     self.register(*models)
   def close(self):
     self.database.close()
+  def generate_create(self, model):
+    base = "CREATE TABLE `%s` (" % model.Table
+    primary = ''
+    for f in model.Structure:
+      base += '\n\t`%s` %s,' % (f.name, f.generate())
+      if type(f) is Fields.Primary:
+        primary = '\n\tPRIMARY KEY (`%s`)' % f.name
+    base += primary + '\n);'
+    return base
