@@ -27,12 +27,10 @@ class Model(object):
       if type(field) is mysql_fields.Primary:
         type.__delattr__(cls, name)
       else:
-        try:
-          if field.null is False:
-            type.__setattr__(cls, field.name, field.empty())
-          else:
-            type.__delattr__(cls, name)
-        except AttributeError: type.__delattr__(cls, name)
+        if field.__dict__.has_key('null') and field.null is True:
+          type.__setattr__(cls, field.name, None)
+        else:
+          type.__setattr__(cls, field.name, field.empty())
     # Store the structure
     cls.Structure = [f[1] for f in fields]
   @classmethod
@@ -70,7 +68,10 @@ class Model(object):
         name = field.name
         if name.endswith('_id'):
           name = name[:-3]
-        foreign_ids = [m.__getattribute__(field.name) for m in rows]
+        foreign_ids = []
+        for m in rows:
+          id = m.__getattribute__(field.name)
+          if id is not None: foreign_ids.append(id)
         unique_foreign_ids = cls._unique_list(foreign_ids)
         # Grab the foreign objects.
         children = include.get(*unique_foreign_ids)
@@ -120,6 +121,8 @@ class Model(object):
         if f.__dict__.has_key('null'):
           if f.null is False:
             raise Exception, exception
+          else:
+            diff[f.name] = 'NULL'
         else:
           raise Exception, exception 
     return diff
@@ -152,6 +155,8 @@ class Model(object):
         if f.__dict__.has_key('null'):
           if f.null is False:
             raise Exception, exception
+          else:
+            ret[f.name] = 'NULL'
         else:
           raise Exception, exception
     return ret
@@ -175,8 +180,10 @@ class Model(object):
       c = 0
       for f in cls.Structure:
         item = r[c]
+        if item is None:
+          item = None
         # Try to do appropriate typecasting based on the field.
-        if type(f) is mysql_fields.Boolean:
+        elif type(f) is mysql_fields.Boolean:
           item = bool(item)
         elif type(f) is mysql_fields.Integer or type(f) is \
           mysql_fields.Primary or type(f) is mysql_fields.Foreign:
@@ -219,7 +226,9 @@ class Model(object):
     t = type(item)
     if t is str:
       # Handle string
-      if escape:
+      if item.lower() == 'null':
+        return item
+      elif escape:
         return '"' + cls.escape(item) + '"'
       else:
         return '"' + item + '"'
