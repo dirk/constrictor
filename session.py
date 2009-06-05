@@ -11,6 +11,14 @@ class Session(object):
   def __init__(self, id, user_agent, ip_address):
     self.id = id;self.user_agent = user_agent;self.ip_address = ip_address
     self.last_activity = int(time.time())
+  def __getattribute__(self, key):
+    """
+    Lenient __getattribute__ on the Session object returns None instead of
+    raising an exception.
+    """
+    try:
+      return object.__getattribute__(self, key)
+    except: pass
 class SessionStore(object):
   # Stubbing out system for maintaining sessions.
   
