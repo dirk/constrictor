@@ -36,5 +36,12 @@ class mysql(object):
     for m in model:
       m.Register()
       self.models.append(m)
+  def register_module(self, module):
+    models = []
+    for item in module.__dict__.values():
+      try:
+        if item.ismodel: models.append(item)
+      except AttributeError: pass
+    self.register(*models)
   def close(self):
     self.database.close()

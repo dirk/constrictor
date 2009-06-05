@@ -8,6 +8,7 @@ class Field(object):
   """
   creation_counter = 0
   name = None
+  null = True
   # All fields require a name corresponding to their name in the table.
   def __init__(self):
     # Took forever to figure this out, then discovered that Django already did
@@ -20,7 +21,6 @@ class Field(object):
   def generate(self): pass
   def empty(self): pass
 class Integer(Field):
-  null = True
   unsigned = True
   auto_increment = False
   def __init__(self, null = True, unsigned = True, auto_increment = False):
@@ -59,7 +59,6 @@ class String(Field):
   Basic string field. Doesn't override the default result method since the 
   database will already send back a string.
   """
-  null = True
   length = 255
   def __init__(self, null = True, length = 255):
     self.null = null
@@ -74,7 +73,6 @@ class String(Field):
     return base
   def empty(self): return ''
 class Text(Field):
-  null = True
   def __init__(self, null = True):
     self.null = null
     super(Text, self).__init__()
@@ -89,7 +87,6 @@ class Boolean(Field):
   """
   Very basic boolean field.
   """
-  null = True
   def __init__(self, null = True):
     self.null = null
     super(Boolean, self).__init__()

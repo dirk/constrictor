@@ -1,6 +1,7 @@
 import fields as mysql_fields
 
 class Model(object):
+  ismodel = True
   mysql = None
   Table = None
   Structure = []
