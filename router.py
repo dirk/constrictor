@@ -25,3 +25,23 @@ class Route(object):
       # The URL matched, grab the params tuple.
       params = match.groups()
       return (self.func, params)
+class Controller_Route(object):
+  """
+  Takes a controller and allows for easy auto-routing to it's methods in the
+  style "/controller/method/params".
+  """
+  def __init__(self, controller, controller_name = False):
+    self.controller = controller
+    if not controller_name: controller_name = controller.__name__.lower()
+    self.route_rec = re.compile(r'^/%s/?([0-9A-z-_]+)?/?([^/]+)?/?$' % controller_name)
+  def match(self, url):
+    match = self.route_rec.match(url)
+    if not match is None:
+      groups = match.groups()
+      method_name = groups[0];params = groups[1]
+      if method_name is None: method_name = 'index'
+      try:
+        method = type.__getattribute__(self.controller, method_name)
+        return (method, params)
+      except AttributeError: return None
+    else: return None

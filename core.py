@@ -4,14 +4,15 @@ from controller import Expose, Filter
 from session import SessionStore
 from utils import recursive_merge, get_default_favicon, defaults
 # Import Route for ease of use.
-from router import Route
+from router import Route, Controller_Route
 
 class Constrictor(object):
   # Importing version number and representation function.
   import __init__ as version
   # Sub-classing:
   from controller import Controller
-  from router import Route # Also imported here for convenience, I guess.
+  from router import Route, Controller_Route
+  # ^ Also imported here for convenience, I guess.
   # - Request class used in routing and processing system.
   from request import Request
   
