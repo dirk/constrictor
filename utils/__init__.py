@@ -1,5 +1,12 @@
 import os, sys
 
+class forgiving_object(object):
+  def __getattribute__(self, key):
+    "Lenient __getattribute__ returns None instead of raising exception."
+    try:
+      return object.__getattribute__(self, key)
+    except: pass
+
 def recursive_merge(original, merge):
   for key in merge.keys():
     # Recursively iterate through child dictionaries

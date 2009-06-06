@@ -1,7 +1,7 @@
 import os, sys
 
 from controller import Expose, Filter
-from session import SessionStore
+#from session import SessionStore
 from utils import recursive_merge, get_default_favicon, defaults
 # Import Route for ease of use.
 from router import Route, Controller_Route
@@ -16,19 +16,8 @@ class Constrictor(object):
   # - Request class used in routing and processing system.
   from request import Request
   
-  session = None # Will hold the session storage object.
   routes = [] # List of routes
   config = {
-    'Session': {
-      # Tells whether Constrictor should even use Sessions.
-      'Use': False,
-      'Security': {
-        'Check IP': False, # Check IP address during session retrieval?
-      },
-      # Defines storage engine Constrictor should use.
-      # (EG: SessionStore (local), memcached, MySQL, etc.)
-      'Store': SessionStore,
-    },
     'Security': {
       'Check Expose': False, # Check for Expose attribute on requested method?
     },
@@ -45,6 +34,7 @@ class Constrictor(object):
       'Redirect': defaults.Redirect,
     },
   }
+  middleware = []
   def __init__(self, config = {}):
     # Adds the path to the application to ease importing.
     # Allows for things like: "from myapp.models import *"
@@ -54,14 +44,7 @@ class Constrictor(object):
     # Recurively combine the original config with the passed configuration to
     # overwrite the original keys with any passed in config.
     recursive_merge(self.config, config)
-    self.sessions = []
-    # Test if sessions are enabled, and instantiate a instance of the session.
-    if self.config['Session']['Use']:
-      self.session = self.config['Session']['Store'](self)
   def process(self, request):
-    # If sessions are enabled, attempt to retrieve a session. (via Request)
-    if self.config['Session']['Use']:
-      request.session = self.session.retrieve(request) or self.session.create(request)
     # Get the method and URL segments, else return a 404 to the Server.
     try:
       method, params = self._match_route(request.path)
@@ -82,7 +65,12 @@ class Constrictor(object):
     try:
       klass = method.im_class
     except AttributeError: klass = None
-    if klass:
+    data = None
+    for m in self.middleware:
+      ret = m.pre_method(request, params)
+      if ret:
+        data = ret; break
+    if klass and not data:
       # Instantiate the instance and retrieve its bound method.
       klass_instance = klass()
       bound_method = klass_instance.__getattribute__(method.__name__)
@@ -95,15 +83,15 @@ class Constrictor(object):
       if not ret:
         data = bound_method(request, params)
         for f in klass_instance.after_filters(): f(request, params)
-    else:
+    elif not data:
       # Otherwise just call the simple method.
       request.method = method
       data = method(request, params)
-    # If sessions are enabled, tell the session storage system to save the
-    # current session.
-    if self.config['Session']['Use']: self.session.save(request.session)
     debug = {'controller': klass, 'method': method, 'args': params}
     return (data, debug)
+  def add_middleware(self, middleware, *args, **kwargs):
+    middleware.instance = self
+    self.middleware.append(middleware(*args, **kwargs))
   def _match_route(self, path):
     # Iterate through routes and find which matches
     for route in self.routes:
