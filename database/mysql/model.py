@@ -6,7 +6,30 @@ class Model(object):
   Table = None
   Structure = []
   _original = {}
+  # List of attributes that can be set by mass assignment.
+  Accessible = []
   
+  def __init__(self, attribs = None, silent = True, force = False):
+    for f in self.Structure: self.__setattr__(f.name, '')
+    if type(attribs) is dict:
+      self.attributes(attribs, silent, force)
+  def attributes(self, attribs, silent = True, force = False):
+    # Assignment by attribute
+    for field in self.Structure:
+      attr = field.name
+      if attr in attribs.keys():
+        # Check if the person has defined a list of Accessible attributes,
+        # otherwise just assign 'em all.
+        if self.Accessible and not force:
+          # See if it's in the the Acccessible list.
+          if attr in self.Accessible:
+            self.__setattr__(attr, attribs[attr])
+          else:
+            if not silent:
+              error = '"%s" cannot be assigned via mass-assignment' % attr
+              raise Exception, error
+        else:
+          self.__setattr__(attr, attribs[attr])
   @classmethod
   def Register(cls):
     """

@@ -25,6 +25,7 @@ class Request(object):
   """
   def redirect(self, location, status = 302):
     self.headers.append('Location: ' + location.strip())
+    self.path = self.path + '" -> "%s' % location
     self.status = status
     data = self.instance.config['Pages']['Redirect']
     data = data.replace('{path}', location)

@@ -21,7 +21,7 @@ class GetHandler(BaseHTTPRequestHandler):
       # Make sure it's a 200 status (not 404) and that it's not a "special"
       # request (EG: favicon).
       log = self.request.ip_address + ' - ' + str(self.request.status) + \
-        ': "' + self.path + '" '
+        ': "' + self.request.path + '" '
       if self.response['core']['controller'] is None:
         controller = ''
       else: controller = self.response['core']['controller'].__name__ + '.'

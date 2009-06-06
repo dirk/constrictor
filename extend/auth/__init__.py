@@ -2,7 +2,7 @@ from constrictor.core import *
 
 import models
 
-class Users(Constrictor.Controller):
+class Users(Controller):
   def index(self, request, params):
     return 'a list of users'
   def login(self, request, params):
