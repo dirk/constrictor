@@ -130,6 +130,7 @@ class Server(object):
   """
   server = None
   instance = None
+  static_dirs = []
   def __init__(self, host, port, instance):
     server = HTTPServer((host, port), GetHandler)
     self.instance = instance
@@ -138,6 +139,7 @@ class Server(object):
     server.RequestHandlerClass.host = host
     server.RequestHandlerClass.domain = host
     server.RequestHandlerClass.parent = self
+  def start(self):
     print 'Starting server, use <Ctrl-C> to stop.'
     try:
       server.serve_forever()

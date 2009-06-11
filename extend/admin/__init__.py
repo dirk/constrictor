@@ -1,6 +1,6 @@
 from constrictor.core import *
 
-import models
+from models import *
 
 class Users(Controller):
   def index(self, request, params):
