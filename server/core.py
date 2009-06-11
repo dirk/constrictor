@@ -1,7 +1,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import urlparse
 # Used for headers
-import time
+import os, time, mimetypes
 
 from constrictor.request import Request
 
@@ -51,6 +51,15 @@ class GetHandler(BaseHTTPRequestHandler):
     
     # Split that path data into the actual path, query-string, etc.
     path = urlparse.urlparse(self.path)
+    for directory in self.parent.static_dirs:
+      p = directory + path.path
+      if os.path.exists(p) and os.path.isfile(p):
+        self.special = True;self.send_response(200)
+        kind = os.path.basename(p)
+        self.send_header('Content-type', mimetypes.guess_type(kind)[0])
+        self.end_headers()
+        f = file(p, 'r');
+        self.wfile.write(f.read())
     # Get post variables
     variables = self.rfile.read(int(self.headers.get('content-length', 0)))
     # Parse get and post variables and store them in params object.
@@ -139,9 +148,10 @@ class Server(object):
     server.RequestHandlerClass.host = host
     server.RequestHandlerClass.domain = host
     server.RequestHandlerClass.parent = self
+    self.server = server
   def start(self):
     print 'Starting server, use <Ctrl-C> to stop.'
     try:
-      server.serve_forever()
+      self.server.serve_forever()
     except KeyboardInterrupt:
       print '\nServer shutdown.'

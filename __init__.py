@@ -1,4 +1,4 @@
-VERSION = (0, 5, 0, 'Beta')
+VERSION = (0, 5, 1, 'Beta')
 # Pretty representation of the version.
 VERSION_STRING = '.'.join([str(x) for x in VERSION[:3]])
 
