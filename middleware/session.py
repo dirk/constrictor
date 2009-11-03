@@ -44,24 +44,28 @@ class Session(Middleware):
     
     Returns None if it cannot retrieve a session.
     """
-    cookie_data = request.request_headers['cookie']
-    cookie = SimpleCookie(cookie_data)
-    # Make sure session is set
-    if not cookie.has_key('session_id'):
+    try:
+      cookie_data = request.request_headers['cookie']
+    except KeyError:
       session = self.create(request)
     else:
-      # Find the session by the provided session_id.
-      # Checks against user_agent and ip_address headers for extra security.
-      found = False
-      for session in self.sessions:
-        if session.id == cookie['session_id'].value and \
-          session.user_agent == request.user_agent:
-          if self.config['Security']['Check IP']:
-            if session.ip_address != request.ip_address: continue
-          session.last_activity = int(time.time())
-          found = True
-          break
-      if not found: session = self.create(request)
+      cookie = SimpleCookie(cookie_data)
+      # Make sure session is set
+      if not cookie.has_key('session_id'):
+        session = self.create(request)
+      else:
+        # Find the session by the provided session_id.
+        # Checks against user_agent and ip_address headers for extra security.
+        found = False
+        for session in self.sessions:
+          if session.id == cookie['session_id'].value and \
+            session.user_agent == request.user_agent:
+            if self.config['Security']['Check IP']:
+              if session.ip_address != request.ip_address: continue
+            session.last_activity = int(time.time())
+            found = True
+            break
+        if not found: session = self.create(request)
     request.session = session
   def create(self, request, auto_header = True, session_id = None):
     """

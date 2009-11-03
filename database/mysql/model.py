@@ -78,7 +78,8 @@ class Model(object):
   @classmethod
   def first(cls, *items, **options):
     options['limit'] = 1
-    return cls.get(*items, **options)[0]
+    ret = cls.get(*items, **options)
+    if ret.__len__() > 0: return ret[0]
   @classmethod
   def _parse_include(cls, rows, **options):
     includes = options['include']

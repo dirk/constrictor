@@ -1,5 +1,5 @@
 h2. Constrictor
 
-...is a web development framework written in Python that adheres to the QMCV (Query-Model-Controller-View) pattern of development _and_ request processing. Currently the framework is still at pre-alpha development stage, though an alpha should be available in a month or two. A more in-depth review of the Query aspect of Constrictor can be found "here":http://esherido.com/13/constrictor-introduction.
+...is a web development framework written in Python that adheres to the MCV (Model-Controller-View) pattern of development _and_ request processing. Currently the framework is still at pre-alpha development stage, though an alpha should be available in a month or two. A more in-depth review of the Query aspect of Constrictor can be found "here":http://esherido.com/13/constrictor-introduction.
 
 *If you are interested in helping out, send me (Dirk Gadsden) a message via GitHub, Twitter, or email.*
