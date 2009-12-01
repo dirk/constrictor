@@ -7,6 +7,56 @@ act like Python expressions.
 from __init__ import Template
 import re, copy
 
+class EV(Template):
+  """
+  New templating system that replaces EvRa. Continous scan of template instead
+  of going line-by-line.
+  """
+  @classmethod
+  def csplit(cls, string, pos): return [string[:pos], string[pos:]]
+  @classmethod
+  def remove_opening_tag(cls, data): return data[2:]
+  @classmethod
+  def closing_tag_split(cls, data): return data.split(r'%>', 1)
+  
+  @classmethod
+  def render(cls, data, variables):
+    scope  = variables
+    
+    ib = data
+    ob = ''
+    pos = ib.find(r'<%')
+    while pos != -1:
+      pre, post = cls.csplit(ib, pos)
+      ob += pre
+      expr, ib = cls.closing_tag_split(cls.remove_opening_tag(post))
+      expr = expr.rstrip() # Remove trailing whitespace
+      
+      if expr.startswith('='):
+        # Take the expression, remove the leading '=' and strip it of any
+        # remaing whitespace before evaluating.
+        ob += eval(expr[1:].strip(), scope, globals())
+      else:
+        expr = expr.strip()
+        for_match   = re.match(r'^for (?P<target>\w+) in (?P<items>\w+):$', expr)
+        while_match = re.match(r'^while (?P<expr>.+):$', expr)
+        if for_match:
+          parts = for_match.groupdict()
+          block, ib = ib.split('<% end %>', 1)
+          for item in scope[parts['items']]:
+            scope[parts['target']] = item
+            ob += cls.render(block, scope)
+        elif while_match:
+          parts = while_match.groupdict()
+          block, ib = ib.split('<% end %>', 1)
+          while(eval(parts['expr'], scope, globals())):
+            ob += cls.render(block, scope)
+        else:
+          exec expr.strip() in globals(), scope
+      pos = ib.find(r'<%')
+    ob += ib
+    return ob
+
 class EvRa(Template):
   @classmethod
   def render(cls, data, variables):
