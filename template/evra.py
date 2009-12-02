@@ -10,7 +10,7 @@ import re, copy
 class EV(Template):
   """
   New templating system that replaces EvRa. Continous scan of template instead
-  of going line-by-line.
+  of going line-by-line. 2x performance improvement over EvRa.
   """
   @classmethod
   def csplit(cls, string, pos): return [string[:pos], string[pos:]]
