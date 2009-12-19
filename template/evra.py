@@ -38,12 +38,14 @@ class EV(Template):
         ob += eval(expr[1:].strip(), scope, globals())
       else:
         expr = expr.strip()
+        # TODO: Make it easier to have custom block-style statements.
         for_match   = re.match(r'^for (?P<target>\w+) in (?P<items>\w+):$', expr)
         while_match = re.match(r'^while (?P<expr>.+):$', expr)
         if for_match:
           parts = for_match.groupdict()
           block, ib = ib.split('<% end %>', 1)
-          for item in scope[parts['items']]:
+          collection = eval(parts['items'], scope, globals())
+          for item in collection:
             scope[parts['target']] = item
             ob += cls.render(block, scope)
         elif while_match:

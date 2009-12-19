@@ -88,25 +88,29 @@ class Model(object):
         mysql_fields.Foreign]
       if not (type(includes) is list or type(includes) is tuple):
         includes = [includes]
-      for include in includes:
-        field = [f for f in foreign_fields if f.model is include][0]
-        name = field.name
-        if name.endswith('_id'):
-          name = name[:-3]
-        foreign_ids = []
-        for m in rows:
-          id = m.__getattribute__(field.name)
-          if id is not None: foreign_ids.append(id)
-        unique_foreign_ids = cls._unique_list(foreign_ids)
-        # Grab the foreign objects.
-        children = include.get(*unique_foreign_ids)
-        # Get the foreign models primary key.
-        foreign_primary = include.get_primary()
-        for r in rows:
-          for c in children:
-            if c.__getattribute__(foreign_primary.name) == \
-              r.__getattribute__(field.name):
-              r.__setattr__(name, c)
+      if foreign_fields.__len__() > 0:
+        # If it is child accessing parent.
+        for include in includes:
+          field = [f for f in foreign_fields if f.model is include][0]
+          name = field.name
+          if name.endswith('_id'):
+            name = name[:-3]
+          foreign_ids = []
+          for m in rows:
+            id = m.__getattribute__(field.name)
+            if id is not None: foreign_ids.append(id)
+          unique_foreign_ids = cls._unique_list(foreign_ids)
+          # Grab the foreign objects.
+          children = include.get(*unique_foreign_ids)
+          # Get the foreign models primary key.
+          foreign_primary = include.get_primary()
+          for r in rows:
+            for c in children:
+              if c.__getattribute__(foreign_primary.name) == \
+                r.__getattribute__(field.name):
+                r.__setattr__(name, c)
+      else:
+        pass # It is parent including its children
     return rows
   def save(self):
     if self._original:
