@@ -72,6 +72,7 @@ class Constrictor(object):
       klass_instance = klass()
       bound_method = klass_instance.__getattribute__(method.__name__)
       request.method = bound_method
+      ret = None
       # Go through filters, actual method is sandwhiched in between.
       for f in klass_instance.before_filters():
         ret = f(request, params)
